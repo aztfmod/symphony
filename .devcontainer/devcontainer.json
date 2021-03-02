@@ -1,0 +1,17 @@
+{
+  "name": "Symphony Development Environment",
+  "dockerFile": "Dockerfile",
+  "runArgs": [
+    "-v", "/var/run/docker.sock:/var/run/docker.sock"
+  ],
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "extensions": [
+    "editorconfig.editorconfig",
+    "golang.go",
+    "hashicorp.terraform",
+    "ms-azuretools.vscode-azureterraform",
+    "ms-azuretools.vscode-docker",
+  ]
+}
