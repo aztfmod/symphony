@@ -10,7 +10,6 @@ declare ENVIRONMENT=""
 declare DEBUG_FLAG=false
 declare LAUNCHPAD_RGS=
 declare MSI_PRINCIPAL_ID=""
-declare MSI_CLIENT_ID=""
 declare SUBSCRIPTION_ID=""
 
 # includes
@@ -34,12 +33,10 @@ main(){
     # Create MSI - az identity create will create or update. Calling a second time will not change the MSI
     # https://docs.microsoft.com/en-us/cli/azure/identity?view=azure-cli-latest
     MSI_PRINCIPAL_ID=$(az identity create -n $MSI_NAME -g $RESOURCE_GROUP | jq -r ".principalId")
-    MSI_CLIENT_ID=$(az identity create -n $MSI_NAME -g $RESOURCE_GROUP | jq -r ".clientId") 
 
     _information "Created Managed Identity $MSI_NAME"
     _debug "MSI Name: $MSI_NAME"
     _debug "MSI Principal Id: $MSI_PRINCIPAL_ID"
-    _debug "MSI Client Id: $MSI_CLIENT_ID"
     _debug_line_break
 
     # Configure MSI Permissions  
