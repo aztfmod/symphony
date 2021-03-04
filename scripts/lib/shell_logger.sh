@@ -25,5 +25,35 @@ _information() {
 }
 
 _success() {
-    printf "\  e[32m$@\n\e[0m"
+    printf "  \e[32m$@\n\e[0m"
+}
+
+declare __PROGRESS_LOG_COUNTER__=0
+
+_progress() {
+  if [ "$DEBUG_FLAG" == false ]; then
+    if [ "$__PROGRESS_LOG_COUNTER__" == 0 ]; then
+      printf "  "
+      __PROGRESS_LOG_COUNTER__=1
+    fi
+    printf "."
+  fi
+}
+
+_progress_end() {
+  __PROGRESS_LOG_COUNTER__=0
+}
+
+_debug_line_break() {
+    if [ "$DEBUG_FLAG" == true ]; then
+      echo " "
+    fi
+}
+
+_line_break() {
+  echo " "
+}
+
+_danger() {
+    printf "  \e[31m$@\n\e[0m"
 }
