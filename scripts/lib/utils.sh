@@ -9,8 +9,8 @@ verify_tool_exists() {
 }
 
 check_az_is_logged_in(){
-  local accountId=$(az account show --query "{Id:id}" -o tsv  2>&1)
-  if [ "$accountId" == "Please run 'az login' to setup account." ]; then
+  __SUBSCRIPTION_ID__=$(az account show --query "{Id:id}" -o tsv  2>&1)
+  if [ "$__SUBSCRIPTION_ID__" == "Please run 'az login' to setup account." ]; then
     _error "Not logged in to az cli. Please run 'az login"
     exit 1
   fi
