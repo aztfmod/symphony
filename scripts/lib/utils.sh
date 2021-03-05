@@ -8,6 +8,14 @@ verify_tool_exists() {
   fi  
 }
 
+check_az_is_logged_in(){
+  local accountId=$(az account show --query "{Id:id}" -o tsv  2>&1)
+  if [ "$accountId" == "Please run 'az login' to setup account." ]; then
+    _error "Not logged in to az cli. Please run 'az login"
+    exit 1
+  fi
+}
+
 print_banner(){
   cat << "EOF"
                            _                       

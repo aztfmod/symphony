@@ -15,8 +15,20 @@ shArgs.parse $@
 
 main(){
     verify_tool_exists "az"
+    check_az_is_logged_in
+    create_vm
 
     _success "GitLab Runner VM Created!"
+}
+
+create_vm(){
+  #https://docs.microsoft.com/en-us/cli/azure/vm?view=azure-cli-latest#az_vm_create
+  echo "create vm"
+}
+
+_az(){
+  local command=$@
+  az $command
 }
 
 usage() {
