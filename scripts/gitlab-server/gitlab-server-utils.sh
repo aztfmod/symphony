@@ -18,6 +18,7 @@ usage() {
     _helpText=" Usage: $me
   -g | --group <Resource_Group_name>    REQUIRED Resource group to place the MSI in.
   -l | --location <azure location>      REQUIRED: Azure region.
+  -i | --ips  <IP Address list>         REQUIRED: List of IP addresses to allow thrue firewall.  (delimiter is space \"a b c\")
   -o | --offer <image offer>            OPTIONAL: Name of gitlab offer.  (Default is gitlab).
   -p | --publisher <image publisher>    OPTIONAL: Name of publisher.  (Default is Bitnami).
   -k | --key <SSH public key file>      OPTIONAL: path to SSH public key.  (Default is ~/.ssh/id_rsa.pub).

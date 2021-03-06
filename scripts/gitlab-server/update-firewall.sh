@@ -48,7 +48,7 @@ open_default_ports_for_ip()
     local ipAddress=$1
     local nsgName=$2
     local rgName=$3
-    local priority=500
+    local priority=$4
     local ruleBaseName='AllowForIP-'    
 
     for port in "${PORTS_TO_OPEN[@]}"
