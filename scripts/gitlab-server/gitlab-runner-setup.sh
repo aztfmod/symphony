@@ -11,7 +11,7 @@ declare VM_IMAGE="UbuntuLTS"
 # script parameters
 declare DEBUG_FLAG=false
 declare RESOURCE_GROUP=""
-declare MODE_SECURE=false # true=1 vm 5 runners, 1 msi  false=5 vms 1 runner each 1 msi per vm
+declare MODE_FULL=false # true=1 vm 5 runners, 1 msi  false=5 vms 5 runner each 1 msi per vm
 
 # includes
 source ../lib/utils.sh
@@ -22,7 +22,7 @@ source ../lib/sh_arg.sh
 shArgs.arg "DEBUG_FLAG" -d --debug FLAG true
 shArgs.arg "VM_PREFIX" -p --prefix PARAMETER true
 shArgs.arg "RESOURCE_GROUP" -g --group PARAMETER true
-shArgs.arg "MODE_SECURE" -s --secure FLAG true
+shArgs.arg "MODE_FULL" -f --full FLAG true
 
 shArgs.parse $@
 
@@ -31,10 +31,15 @@ main(){
     check_inputs
     check_az_is_logged_in
 
-    if [ "$MODE_SECURE" == true ]; then
+    if [ "$MODE_FULL" == true ]; then
       echo "todo: create multiple vms"
     else
-      create_single_vm | jq
+      _debug "Running in basic mode. "
+
+      local publicIp=$(create_single_vm | jq -r '.publicIpAddress')
+      _debug "VM Created! Public Ip: $publicIp"
+
+      wait_for_cloud_init_completion "$publicIp"
     fi;
 
     _success "GitLab Runner VM Created!"
@@ -42,9 +47,22 @@ main(){
 
 create_single_vm() {
   local vmName="$VM_PREFIX-1"
-  result=$(az vm create -n $vmName -g $RESOURCE_GROUP --size $VM_SIZE --image $VM_IMAGE --storage-sku Premium_LRS --ssh-key-values "@~/.ssh/id_rsa.pub" 2>&1)
+  _debug "Creating VM $vmName"
+  result=$(az vm create -n $vmName -g $RESOURCE_GROUP --size $VM_SIZE --image $VM_IMAGE --storage-sku Premium_LRS --admin-username gitlab --ssh-key-values $PUBLIC_KEY --custom-data "runner/cloud-config.yml" 2>&1)
   check_command_status "$result" $?
+  
   echo $result
+}
+
+wait_for_cloud_init_completion() {
+  local ip=$1
+  _information "Waiting for cloud init to complete."
+  _debug "running: ssh gitlab@$ip 'cloud-init status'"
+
+  status=$(ssh gitlab@$ip 'cloud-init status')
+  while [ status != "status: done" ]; do
+   status=$(ssh gitlab@$ip 'cloud-init status')  
+  done
 }
 
 check_command_status() {
@@ -53,14 +71,7 @@ check_command_status() {
   if [ "$status" != "0" ]; then
       _error "$result"
       exit $status
-    fi  
-}
-create_vm(){
-  #https://docs.microsoft.com/en-us/cli/azure/vm?view=azure-cli-latest#az_vm_create
-  #az vm create -n VM_NAME -g hackday2 --size Standard_DS12_v2 -l westus --image GitHub:GitHub-Enterprise:GitHub-Enterprise:3.0.1 --storage-sku Premium_LRS --ssh-key-values "@~/.ssh/id_rsa.pub"
-  #az vm create -n VM_NAME -g hackday2 --size Standard_DS12_v2 -l westus --image GitHub:GitHub-Enterprise:GitHub-Enterprise:3.0.1 --storage-sku Premium_LRS --ssh-key-values "@~/.ssh/id_rsa.pub"
-  
-  echo "create vm"
+  fi  
 }
 
 check_public_key(){
@@ -74,8 +85,6 @@ check_inputs(){
     _debug_line_break
     _debug "      Subscription Id : $__SUBSCRIPTION_ID__"
     _debug "       Resource Group : $RESOURCE_GROUP"
-    _debug "       Runner VM Name : $VM_NAME"
-    _debug "     Environment Name : $ENVIRONMENT"
     _debug "                Debug : $DEBUG_FLAG"
     _debug_line_break
 
@@ -83,7 +92,6 @@ check_inputs(){
         _error "Resource Group is required!"
         usage
     fi
-  
 }
 
 _az(){
