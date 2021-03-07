@@ -105,11 +105,10 @@ deploy(){
 }
 
 configure_nsg_rules(){
-    ipArr=($ALLOW_ACCESS_TO_IP_ADDRESSES)
     priority=500
-    for ip in "${ipArr[@]}"
+    for ip in $ALLOW_ACCESS_TO_IP_ADDRESSES
     do
-        echo "Upserting rules for ${ip}"
+        _information "Upserting rules for ${ip}"
         open_default_ports_for_ip $ip $NSG_NAME $RESOURCE_GROUP $priority
         priority=$(($priority+100))
     done

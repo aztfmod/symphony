@@ -52,7 +52,7 @@ shArgs.parse(){
         case $1 in
             *)   
                 _varName=${_SH_SWITCHES[$1]}      
-         
+                
                 if [ ! -z "$_varName" ]; then
                     argType=${_SH_TYPES[$_varName]}
                     autoExport=${_SH_AUTOS[$_varName]}
@@ -63,10 +63,21 @@ shArgs.parse(){
                             eval "$_varName=true"
                         fi
                     else
-                        _SH_ARGUMENTS[$_varName]=$2
-                        if [ "$autoExport" == true ]; then
-                            eval "$_varName=$2"
+                        local _varValue=""
+                        if [[ "$2" == *","* ]]; then
+                            local _listInput=$2
+                            local arr
+                            IFS=, read -a arr <<<"${_listInput}"
+                            listData="${arr[@]}"
+                            _varValue=$listData
+                            _SH_ARGUMENTS[$_varName]="$listData"
+                        else
+                            _varValue=$2                             
                         fi
+                        _SH_ARGUMENTS[$_varName]=$_varValue
+                        if [ "$autoExport" == true ]; then
+                            eval "$_varName=\"$_varValue\""
+                        fi                                           
                         shift
                     fi
                     if [ ! -z "$hookFunction" ]; then          
