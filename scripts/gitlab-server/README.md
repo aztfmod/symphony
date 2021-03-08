@@ -8,7 +8,10 @@
 ## Pre-requisites
 
 - Create a DNS entry (doc it)
-- Generate a certificate for the dns entry with letsencrypt (doc it)
+
+### Generate a certificate for the dns entry with letsencrypt (doc it)
+
+
 - determine the version of gitlab
 - generate managed identities and assign contributor to sub (TODO - needs validation)
 
