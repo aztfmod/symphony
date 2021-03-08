@@ -148,15 +148,21 @@ shArgs.parse(){
 
     for (( i=0; i<${#input_string}; i++ )); do
         char=${input_string:$i:1}    
+
         if [ "$char" == "-" ]; then
-          if [ ! -z "$tmp" ]; then
-            _processLine "$tmp"
-            tmp=""
-          fi
-          if [ "${input_string:$i:2}" == "--" ]; then
-            tmp+="$char"
-            i=$((i+1))
-          fi
+            if [ "$i" -gt "0"  ]; then
+                char2=${input_string:$i-1:1}   
+                if [ "$char2" == " " ]; then
+                    if [ ! -z "$tmp" ]; then
+                        _processLine "$tmp"
+                        tmp=""
+                    fi
+                    if [ "${input_string:$i:2}" == "--" ]; then
+                        tmp+="$char"
+                        i=$((i+1))
+                    fi
+                fi
+            fi        
         fi
         tmp+="$char"
     done   
