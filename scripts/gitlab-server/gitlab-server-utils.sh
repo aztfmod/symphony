@@ -16,15 +16,16 @@ usage() {
     fi    
 
     _helpText=" Usage: $me
-  -g | --group <Resource_Group_name>    REQUIRED Resource group to place the MSI in.
-  -l | --location <azure location>      REQUIRED: Azure region.
-  -i | --ips  <IP Address list>         REQUIRED: List of IP addresses to allow thrue firewall.  (delimiter is space \"a b c\")
-  -o | --offer <image offer>            OPTIONAL: Name of gitlab offer.  (Default is gitlab).
-  -p | --publisher <image publisher>    OPTIONAL: Name of publisher.  (Default is Bitnami).
-  -k | --key <SSH public key file>      OPTIONAL: path to SSH public key.  (Default is ~/.ssh/id_rsa.pub).
-  -n | --name  <server name>            OPTIONAL: Name you want the gitlab server to use.  (Default is gitlab-server)
-  -s | --sku  <environment name>        OPTIONAL: VM Sku.  (Default is Standard_D4s_v3)
-  -d | --debug                          OPTIONAL: Flag to turn debug logging on.
+  -g  | --group <Resource_Group_name>    REQUIRED Resource group to place the MSI in.
+  -l  | --location <azure location>      REQUIRED: Azure region.
+  -i  | --ips  <IP Address list>         REQUIRED: List of IP addresses to allow thrue firewall.  (delimiter is space \"a b c\")
+  -o  | --offer <image offer>            OPTIONAL: Name of gitlab offer.  (Default is gitlab).
+  -p  | --publisher <image publisher>    OPTIONAL: Name of publisher.  (Default is Bitnami).
+  -k  | --key <SSH public key file>      OPTIONAL: path to SSH public key.  (Default is ~/.ssh/id_rsa.pub).
+  -n  | --name  <server name>            OPTIONAL: Name you want the gitlab server to use.  (Default is gitlab-server)
+  -c  | --use-self-signed-cert <label>   OPTIONAL: Configure DNS label.  Must run script post deployment to configure gitlab to use self-signed cert.
+  -s  | --sku  <environment name>        OPTIONAL: VM Sku.  (Default is Standard_D4s_v3)
+  -d  | --debug                          OPTIONAL: Flag to turn debug logging on.
    
    dependencies:
    -az $azStatusMessage"

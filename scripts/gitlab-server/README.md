@@ -1,5 +1,10 @@
 # Configure a gitlab environment that supports CAF/Lucidity Development
 
+- Steps to complete buildout
+  - Run the gitlab server deployment
+  - SSH on to server and run server config
+  - Run runner deployment
+
 ## Pre-requisites
 
 - Create a DNS entry (doc it)

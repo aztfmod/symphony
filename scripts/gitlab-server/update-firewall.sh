@@ -54,8 +54,8 @@ open_default_ports_for_ip()
     for port in "${PORTS_TO_OPEN[@]}"
     do
         echo "Opening port ${port} for IP Address: ${ipAddress}"
-
-        add_nsg_inbound_rule_for_ip ${ruleBaseName}${port} $nsgName $rgName $priority $ipAddress $port
+        ruleName=${ruleBaseName}$(echo $ipAddress | sed 's/\.//g')'-'${port}
+        add_nsg_inbound_rule_for_ip ${ruleName} $nsgName $rgName $priority $ipAddress $port
         priority=$(($priority+1))
     done
 

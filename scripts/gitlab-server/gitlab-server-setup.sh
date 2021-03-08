@@ -13,8 +13,11 @@ declare IMAGE_PUBLISHER="Bitnami"
 declare IP_ACCESS_LIST=""
 declare FULL_IMAGE_NAME=""
 declare SSH_PUBLIC_KEY_FILE_PATH="~/.ssh/id_rsa.pub"
+declare DNS_LABEL=""
 declare ALLOW_ACCESS_TO_IP_ADDRESSES=""
 declare NSG_NAME=""
+declare SERVER_PUBLIC_IP=""
+declare SERVER_PUBLIC_IP_NAME=""
 declare DEBUG_FLAG=false
 
 
@@ -34,6 +37,7 @@ shArgs.arg "IMAGE_OFFER" -o --offer PARAMETER true
 shArgs.arg "IMAGE_PUBLISHER" -p --publisher PARAMETER true
 shArgs.arg "SSH_PUBLIC_KEY_FILE_PATH" -k --key PARAMETER true
 shArgs.arg "ALLOW_ACCESS_TO_IP_ADDRESSES" -i --ips PARAMETER true
+shArgs.arg "DNS_LABEL" -c --use-self-signed-cert PARAMETER true
 
 shArgs.arg "DEBUG_FLAG" -d --debug FLAG true
 
@@ -55,12 +59,22 @@ main(){
     _information "Deploying gitlab server ${SERVER_NAME}"
     deploy
 
-    _information "Retrieving NSG name"
     NSG_NAME=$(get_nsg_name ${RESOURCE_GROUP})
+    _information "Retrieved NSG name: '${NSG_NAME}'"
 
     _information "Adding firewall rules for IP's ${ALLOW_ACCESS_TO_IP_ADDRESSES}"
     configure_nsg_rules
 
+    _information "Deleting default ssh rule default-allow-ssh"
+    delete_nsg_rule 'default-allow-ssh' $NSG_NAME $RESOURCE_GROUP
+
+    if [ -z "$DNS_LABEL" ]; then
+        _information "DNS label not set, skipping confugration of label on public IP."
+    else
+        _information "Configuring server DNS label '${DNS_LABEL}' on public IP '${SERVER_PUBLIC_IP}'."
+        lookup_public_ip_address_name
+        configure_server_dns_label
+    fi
 }
 
 check_inputs(){ 
@@ -73,6 +87,7 @@ check_inputs(){
     _debug "      Image Publisher : $IMAGE_PUBLISHER"
     _debug "  SSH Public Key path : $SSH_PUBLIC_KEY_FILE_PATH"
     _debug "  IP Addresses(Allow) : ${ALLOW_ACCESS_TO_IP_ADDRESSES}"
+    _debug "            DNS Label : ${DNS_LABEL}"
     _debug "                Debug : $DEBUG_FLAG"
     _debug_line_break
 
@@ -101,7 +116,13 @@ create_resource_group(){
 }
 
 deploy(){
-    az vm create -n $SERVER_NAME -g $RESOURCE_GROUP --size $SKU -l $LOCATION --image $FULL_IMAGE_NAME --storage-sku Premium_LRS --ssh-key-values "@${SSH_PUBLIC_KEY_FILE_PATH}" --admin-username gitlab
+    output=$(az vm create -n $SERVER_NAME -g $RESOURCE_GROUP --size $SKU -l $LOCATION --image $FULL_IMAGE_NAME --storage-sku Premium_LRS --ssh-key-values "@${SSH_PUBLIC_KEY_FILE_PATH}" --admin-username gitlab -o json)
+
+    _debug_json "${output}"
+
+    SERVER_PUBLIC_IP=$(echo $output | jq -c -r .publicIpAddress)
+
+    _information "Extracting public IP from deployment.  ${SERVER_PUBLIC_IP}"
 }
 
 configure_nsg_rules(){
@@ -112,6 +133,17 @@ configure_nsg_rules(){
         open_default_ports_for_ip $ip $NSG_NAME $RESOURCE_GROUP $priority
         priority=$(($priority+100))
     done
+}
+
+lookup_public_ip_address_name(){
+    SERVER_PUBLIC_IP_NAME=`az network public-ip list -g $RESOURCE_GROUP --query "[?ipAddress=='${SERVER_PUBLIC_IP}'].name" -o tsv`
+
+    _debug "Public Ip Name is ${SERVER_PUBLIC_IP_NAME}"
+}
+
+configure_server_dns_label(){
+
+    az network public-ip update -g $RESOURCE_GROUP -n $SERVER_PUBLIC_IP_NAME --dns-name $DNS_LABEL --allocation-method Static
 }
 
 main
