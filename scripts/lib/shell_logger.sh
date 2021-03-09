@@ -16,7 +16,7 @@ _debug() {
 
 _debug_json() {
     if [ "$DEBUG_FLAG" == true ]; then
-        echo $1 | jq
+        echo $1 | jq .
     fi
 }
 
