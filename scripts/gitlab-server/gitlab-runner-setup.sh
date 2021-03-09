@@ -35,10 +35,17 @@ main(){
       echo "todo: create multiple vms"
     else
       _debug "Running in basic mode. "
+      
+      local vmName="$VM_PREFIX-2"
+      _debug "Creating VM $vmName"
 
-      local publicIp=$(create_single_vm | jq -r '.publicIpAddress')
+      local vmCreateResult=$(create_single_vm "$vmName")
+      _debug "VM Create Result: $vmCreateResult"
+      
+      local publicIp=$(echo $vmCreateResult | jq -r '.publicIpAddress')
       _debug "VM Created! Public Ip: $publicIp"
 
+      add_ip_to_known_hosts "$publicIp"
       wait_for_cloud_init_completion "$publicIp"
     fi;
 
@@ -46,22 +53,28 @@ main(){
 }
 
 create_single_vm() {
-  local vmName="$VM_PREFIX-1"
-  _debug "Creating VM $vmName"
+  local vmName=$1
   result=$(az vm create -n $vmName -g $RESOURCE_GROUP --size $VM_SIZE --image $VM_IMAGE --storage-sku Premium_LRS --admin-username gitlab --ssh-key-values $PUBLIC_KEY --custom-data "runner/cloud-config.yml" 2>&1)
   check_command_status "$result" $?
-  
   echo $result
 }
 
+add_ip_to_known_hosts()  {
+  ssh-keyscan $1 >> ~/.ssh/known_hosts
+}
+
 wait_for_cloud_init_completion() {
+  sleep 5
   local ip=$1
   _information "Waiting for cloud init to complete."
   _debug "running: ssh gitlab@$ip 'cloud-init status'"
 
   status=$(ssh gitlab@$ip 'cloud-init status')
-  while [ status != "status: done" ]; do
-   status=$(ssh gitlab@$ip 'cloud-init status')  
+  while [ "$status" != "status: done" ]; do
+    _debug "running: ssh gitlab@$ip 'cloud-init status'"
+    status=$(ssh gitlab@$ip 'cloud-init status')  
+    _debug "got status:$status. sleeping for 5 seconds"
+    sleep 5
   done
 }
 
