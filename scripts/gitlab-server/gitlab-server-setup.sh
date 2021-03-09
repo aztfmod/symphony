@@ -18,7 +18,7 @@ declare ALLOW_ACCESS_TO_IP_ADDRESSES=""
 declare NSG_NAME=""
 declare SERVER_PUBLIC_IP=""
 declare SERVER_PUBLIC_IP_NAME=""
-FQDN=""
+declare FQDN=""
 declare DEBUG_FLAG=false
 
 
@@ -158,6 +158,7 @@ print_summary(){
          RESOURCE GROUP: ${RESOURCE_GROUP}
                 VM NAME: ${SERVER_NAME}
                   VM IP: ${SERVER_PUBLIC_IP}
+                   USER: gitlab
                    FQDN: ${FQDN}
     SSH PUBLIC KEY FILE: ${SSH_PUBLIC_KEY_FILE_PATH}
 "
