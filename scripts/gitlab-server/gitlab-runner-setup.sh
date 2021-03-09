@@ -64,7 +64,7 @@ create_single_vm() {
 
       add_ip_to_known_hosts "$publicIp"
       wait_for_cloud_init_completion "$publicIp"
-      local publicIp="40.118.201.9"
+
       copy_cert_to_vm "$publicIp"
 
       _debug "Creating MSI $vmName"
