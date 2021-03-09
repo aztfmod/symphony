@@ -3,34 +3,38 @@
 
 declare me=`basename "$0"`
 
-declare DIRECTORY=./configure-server
+declare SOURCE_DIRECTORY=./configure-server
+declare TARGET_DIRECTORY=""
 declare FQDN=""
 declare SSH_PUBLIC_KEY_FILE="~/.ssh/id_rsa"
 declare USER="gitlab"
+declare REMOVE_FIRST=false
 declare DEBUG_FLAG=false
 
 source ../lib/shell_logger.sh
 source ../lib/sh_arg.sh
 
 shArgs.arg "FQDN" -f --fqdn PARAMETER true
-shArgs.arg "DIRECTORY" -d --directory PARAMETER true
+shArgs.arg "SOURCE_DIRECTORY" -d --directory PARAMETER true
 shArgs.arg "SSH_PUBLIC_KEY_FILE" -k --key PARAMETER true
 shArgs.arg "USER" -u --user PARAMETER true
+shArgs.arg "REMOVE_FIRST" -r --removeFirst FLAG true
 shArgs.arg "DEBUG_FLAG" -d --debug FLAG true
 
 shArgs.parse $@
 
 check_inputs(){ 
     _debug_line_break
-    _debug "        Directory : $DIRECTORY"
+    _debug " Source Directory : $SOURCE_DIRECTORY"
     _debug "             FQDN : $FQDN"
     _debug "   SSH Public Key : $SSH_PUBLIC_KEY_FILE"
     _debug "             User : $USER"
+    _debug "      removeFirst : $REMOVE_FIRST"
     _debug "       Debug Flag : $DEBUG_FLAG"
     _debug_line_break
 
-    if [ -z "$DIRECTORY" ]; then
-        _error "Directory is required!"
+    if [ -z "$SOURCE_DIRECTORY" ]; then
+        _error "Source  is required!"
         usage
     fi
     if [ -z "$FQDN" ]; then
@@ -45,9 +49,10 @@ usage() {
     _helpText=" Usage: $me
 
   -f  | --fqdn <Fully Qualified Domain Name>  REQUIRED: Fully qualified domain name of gitlab server
-  -d  | --directory  <Local Directory>        REQUIRED: directory to copy to server
+  -s  | --sourceDir  <Local Directory>        REQUIRED: source to copy to server (must be a directory at same level or below script exec dir)
   -k  | --key <SSH public key file>           OPTIONAL: path to SSH public key.  (Default is ~/.ssh/id_rsa.pub).
   -u  | --user <username>                     OPTIONAL: admin username (Default is gitlab)
+  -r  | --removeFirst                         OPTIONAL: Drop and recreate directory on host
   -d  | --debug                               OPTIONAL: Flag to turn debug logging on.
 "
                 
@@ -70,15 +75,21 @@ EOF
 }
 
 
-
 main(){
     check_inputs
 
-    target="${USER}@${FQDN}:/home/${USER}/${DIRECTORY}"
+    TARGET_DIRECTORY=$(echo ${SOURCE_DIRECTORY} | sed '0,/.\//s///')
+    target="${USER}@${FQDN}:/home/${USER}/"
+    remHost="${USER}@${FQDN}"
+    remDir="/home/${USER}/${TARGET_DIRECTORY}"
 
-    _debug "scp'ing files in directory ${DIRECTORY} to ${target}"
-    
-    scp -i $SSH_PUBLIC_KEY_FILE -r ${DIRECTORY} ${target}
+    if [ $REMOVE_FIRST == "true" ]; then
+        _information "Removing directory ${remDir} on host."
+        ssh -i $SSH_PUBLIC_KEY_FILE $remHost "rm -rf ${remDir}"
+    fi
+
+    _debug "scp'ing files in directory ${SOURCE_DIRECTORY} to ${target}"
+    scp -i $SSH_PUBLIC_KEY_FILE -r ${SOURCE_DIRECTORY} ${target}
 }
 
 main
