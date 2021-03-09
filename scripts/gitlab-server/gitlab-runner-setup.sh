@@ -7,11 +7,14 @@ declare VM_PREFIX="gitlab-runner"
 declare VM_COUNT=1
 declare VM_SIZE="Standard_D8s_v3"
 declare VM_IMAGE="UbuntuLTS"
+declare CERT_PATH=""
 
 # script parameters
 declare DEBUG_FLAG=false
 declare RESOURCE_GROUP=""
 declare MODE_FULL=false # true=1 vm 5 runners, 1 msi  false=5 vms 5 runner each 1 msi per vm
+declare GITLAB_TOKEN=""
+declare GITLAB_URL=""
 
 # includes
 source ../lib/utils.sh
@@ -23,6 +26,9 @@ shArgs.arg "DEBUG_FLAG" -d --debug FLAG true
 shArgs.arg "VM_PREFIX" -p --prefix PARAMETER true
 shArgs.arg "RESOURCE_GROUP" -g --group PARAMETER true
 shArgs.arg "MODE_FULL" -f --full FLAG true
+shArgs.arg "CERT_PATH" -c --cert-path PARAMETER true
+shArgs.arg "GITLAB_TOKEN" -gt --gitlab-token PARAMETER true
+shArgs.arg "GITLAB_URL" -gu --gitlab-url PARAMETER true
 
 shArgs.parse $@
 
@@ -32,14 +38,25 @@ main(){
     check_az_is_logged_in
 
     if [ "$MODE_FULL" == true ]; then
-      echo "todo: create multiple vms"
+        _debug "Running in full mode."
+        for i in {1..5}; do
+            local vmName="$VM_PREFIX-$i"
+            create_single_vm "$vmName"
+        done
     else
-      _debug "Running in basic mode. "
-      
-      local vmName="$VM_PREFIX-2"
+        _debug "Running in basic mode. "
+        local vmName="$VM_PREFIX-1"
+        create_single_vm "$vmName"
+    fi;
+
+    _success "GitLab Runner VM Created!"
+}
+
+create_single_vm() {
+      local vmName=$1
       _debug "Creating VM $vmName"
 
-      local vmCreateResult=$(create_single_vm "$vmName")
+      local vmCreateResult=$(create_vm "$vmName")
       _debug "VM Create Result: $vmCreateResult"
       
       local publicIp=$(echo $vmCreateResult | jq -r '.publicIpAddress')
@@ -47,12 +64,45 @@ main(){
 
       add_ip_to_known_hosts "$publicIp"
       wait_for_cloud_init_completion "$publicIp"
-    fi;
+      local publicIp="40.118.201.9"
+      copy_cert_to_vm "$publicIp"
 
-    _success "GitLab Runner VM Created!"
+      _debug "Creating MSI $vmName"
+      local msiId=$(create_msi "$vmName")
+      _debug "msiId $msiId"
+      assign_msi "$vmName"
+
+      copy_custom_runner_image_to_vm "$publicIp" "$msiId" "$vmName"
 }
 
-create_single_vm() {
+assign_msi() {
+    local vmName=$1
+    az vm identity assign -g $RESOURCE_GROUP -n $vmName --identities $vmName
+}
+
+create_msi() {
+  local msiName=$1
+  local msiId=$(az identity create -n $msiName -g $RESOURCE_GROUP | jq -r ".id")
+  echo $msiId
+}
+
+copy_custom_runner_image_to_vm() {
+  local ip=$1
+  local msiId=$2
+  local agentName=$3
+  scp -r ./runner/custom-agent "gitlab@$ip":~/
+  scp $CERT_PATH "gitlab@$ip":~/custom-agent/gitlab.crt 
+  ssh gitlab@$ip "chmod +x ~/custom-agent/configure-runners.sh && cd ~/custom-agent && ./configure-runners.sh $msiId $GITLAB_TOKEN $GITLAB_URL $agentName"
+}
+
+copy_cert_to_vm() {
+  local ip=$1
+  scp $CERT_PATH "gitlab@$ip":~/gitlab.crt
+  ssh gitlab@$ip 'sudo mv ~/gitlab.crt /usr/local/share/ca-certificates/gitlab.crt'
+  ssh gitlab@$ip 'sudo update-ca-certificates '
+}
+
+create_vm() {
   local vmName=$1
   result=$(az vm create -n $vmName -g $RESOURCE_GROUP --size $VM_SIZE --image $VM_IMAGE --storage-sku Premium_LRS --admin-username gitlab --ssh-key-values $PUBLIC_KEY --custom-data "runner/cloud-config.yml" 2>&1)
   check_command_status "$result" $?
@@ -64,18 +114,20 @@ add_ip_to_known_hosts()  {
 }
 
 wait_for_cloud_init_completion() {
-  sleep 5
-  local ip=$1
-  _information "Waiting for cloud init to complete."
-  _debug "running: ssh gitlab@$ip 'cloud-init status'"
-
-  status=$(ssh gitlab@$ip 'cloud-init status')
-  while [ "$status" != "status: done" ]; do
-    _debug "running: ssh gitlab@$ip 'cloud-init status'"
-    status=$(ssh gitlab@$ip 'cloud-init status')  
-    _debug "got status:$status. sleeping for 5 seconds"
     sleep 5
-  done
+    local ip=$1
+    _information "Waiting for cloud init to complete."
+    _debug "running: ssh gitlab@$ip 'cloud-init status'"
+
+    status=$(ssh gitlab@$ip 'cloud-init status')
+    _debug "got status:$status."
+    while [ "$status" != "status: done" ]; do
+        _debug "sleeping for 10 seconds"
+        sleep 10
+        _debug "running: ssh gitlab@$ip 'cloud-init status'"
+        status=$(ssh gitlab@$ip 'cloud-init status')  
+        _debug "got status:$status."
+    done
 }
 
 check_command_status() {
@@ -97,7 +149,10 @@ check_public_key(){
 check_inputs(){ 
     _debug_line_break
     _debug "      Subscription Id : $__SUBSCRIPTION_ID__"
+    _debug "         Gitlab Token : $GITLAB_TOKEN"
+    _debug "           Gitlab Url : $GITLAB_URL"
     _debug "       Resource Group : $RESOURCE_GROUP"
+    _debug "            Cert Path : $CERT_PATH"
     _debug "                Debug : $DEBUG_FLAG"
     _debug_line_break
 

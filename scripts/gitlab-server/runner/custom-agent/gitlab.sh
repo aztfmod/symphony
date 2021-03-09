@@ -7,8 +7,6 @@ function finally {
   /usr/local/bin/gitlab-runner unregister --all-runners
 }
 
-echo "******************** HERE ***********"
-
 trap finally EXIT SIGTERM
 
 if [ -n "${AGENT_TOKEN}" ]; then
