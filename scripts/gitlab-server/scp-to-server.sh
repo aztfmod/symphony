@@ -7,6 +7,7 @@ declare DIRECTORY=./configure-server
 declare FQDN=""
 declare SSH_PUBLIC_KEY_FILE="~/.ssh/id_rsa"
 declare USER="gitlab"
+declare DEBUG_FLAG=false
 
 source ../lib/shell_logger.sh
 source ../lib/sh_arg.sh
@@ -15,6 +16,7 @@ shArgs.arg "FQDN" -f --fqdn PARAMETER true
 shArgs.arg "DIRECTORY" -d --directory PARAMETER true
 shArgs.arg "SSH_PUBLIC_KEY_FILE" -k --key PARAMETER true
 shArgs.arg "USER" -u --user PARAMETER true
+shArgs.arg "DEBUG_FLAG" -d --debug FLAG true
 
 shArgs.parse $@
 
@@ -24,6 +26,7 @@ check_inputs(){
     _debug "             FQDN : $FQDN"
     _debug "   SSH Public Key : $SSH_PUBLIC_KEY_FILE"
     _debug "             User : $USER"
+    _debug "       Debug Flag : $DEBUG_FLAG"
     _debug_line_break
 
     if [ -z "$DIRECTORY" ]; then
@@ -45,6 +48,7 @@ usage() {
   -d  | --directory  <Local Directory>        REQUIRED: directory to copy to server
   -k  | --key <SSH public key file>           OPTIONAL: path to SSH public key.  (Default is ~/.ssh/id_rsa.pub).
   -u  | --user <username>                     OPTIONAL: admin username (Default is gitlab)
+  -d  | --debug                               OPTIONAL: Flag to turn debug logging on.
 "
                 
     _information "$_helpText" 1>&2
@@ -72,7 +76,7 @@ main(){
 
     target="${USER}@${FQDN}:/home/${USER}/${DIRECTORY}"
 
-    echo "scp'ing files in directory ${DIRECTORY} to ${target}"
+    _debug "scp'ing files in directory ${DIRECTORY} to ${target}"
     
     scp -i $SSH_PUBLIC_KEY_FILE -r ${DIRECTORY} ${target}
 }
