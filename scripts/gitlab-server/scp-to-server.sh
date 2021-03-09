@@ -90,6 +90,11 @@ main(){
 
     _debug "scp'ing files in directory ${SOURCE_DIRECTORY} to ${target}"
     scp -i $SSH_PUBLIC_KEY_FILE -r ${SOURCE_DIRECTORY} ${target}
+
+    remDir="/home/${USER}/lib"
+
+    # copy over lib folder
+    scp -i $SSH_PUBLIC_KEY_FILE -r ../lib $target
 }
 
 main
