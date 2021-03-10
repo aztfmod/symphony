@@ -81,7 +81,7 @@ replace_external_url(){
 generate_self_signed_ssl_cert(){
     pushd /etc/gitlab/ssl
     
-    # Delete the existing server cert.
+    # Delete the existing server cert if one exist.
     sudo rm -rf server.*
 
     # Generate the new self-signed cert
