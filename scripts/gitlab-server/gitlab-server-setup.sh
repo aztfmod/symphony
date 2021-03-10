@@ -19,6 +19,7 @@ declare NSG_NAME=""
 declare SERVER_PUBLIC_IP=""
 declare SERVER_PUBLIC_IP_NAME=""
 declare FQDN=""
+declare PRIVATE_IP=""
 declare DEBUG_FLAG=false
 
 
@@ -76,6 +77,8 @@ main(){
         lookup_public_ip_address_name
         configure_server_dns_label
     fi
+
+    get_private_ip
 
     print_summary
 }
@@ -153,11 +156,16 @@ configure_server_dns_label(){
     FQDN=$(az network public-ip show -g $RESOURCE_GROUP -n ${SERVER_PUBLIC_IP_NAME} --query dnsSettings.fqdn -o tsv)
 }
 
+get_private_ip(){
+    PRIVATE_IP=$(az vm show -d -n $SERVER_NAME -g $RESOURCE_GROUP --query privateIps -o tsv)
+}
+
 print_summary(){
     _summary=" Summary: $me \n
          RESOURCE GROUP: ${RESOURCE_GROUP}
                 VM NAME: ${SERVER_NAME}
-                  VM IP: ${SERVER_PUBLIC_IP}
+           VM PUBLIC IP: ${SERVER_PUBLIC_IP}
+          VM PRIVATE IP: ${PRIVATE_IP}
                    USER: gitlab
                    FQDN: ${FQDN}
     SSH PUBLIC KEY FILE: ${SSH_PUBLIC_KEY_FILE_PATH}
