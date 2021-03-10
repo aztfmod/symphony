@@ -1,16 +1,23 @@
 # Configure a gitlab environment that supports CAF/Lucidity Development
 
 - Steps to complete buildout
-  - Run the gitlab server deployment
-  - SSH on to server and run server config
-  - Run runner deployment
+  - Run the gitlab server deployment [gitlab-server-setup.sh](./gitlab-server-setup.sh)
+  - SSH on to server and run server config [Scripts in configure-server](./configure-server)
+    - [configure-gitlab.sh](./configure-server/configure-gitlab.sh)
+    - [fetch-gitlab-token.sh](./configure-server/fetch-gitlab-token.sh)
+    - [create-account(s).sh](./configure-server/create-account.sh)
+    - [create-environment(s).sh](./configure-server/create-environment.sh)
+  - Run runner deployment [gitlab-runner-setup.sh](./gitlab-runner-setup.sh)
+- Example Commands
+  - ```./gitlab-server-setup.sh  -g gitlab-test-rg -l westus2 -i "50.35.50.113 76.95.182.203 50.47.105.108" -c rguthrie-gitlab-server -d```
+  - ```./scp-to-server.sh -f rguthrie-gitlab-server.westus2.cloudapp.azure.com -s ./configure-server -d -r```
+  - ```./configure-gitlab.sh -f rguthrie-gitlab-server.westus2.cloudapp.azure.com -i 52.183.70.115 -p Thund3rd0m3! -d```
 
 ## Pre-requisites
 
 - Create a DNS entry (doc it)
 
 ### Generate a certificate for the dns entry with letsencrypt (doc it)
-
 
 - determine the version of gitlab
 - generate managed identities and assign contributor to sub (TODO - needs validation)

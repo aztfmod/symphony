@@ -73,10 +73,10 @@ main(){
     check_inputs
 
     if [ $MODE == "project" ]; then
-        echo "got here"
+        _debug "Fetching project runner token..."
         token=$(get_project_runner_token $REPO_NAME)
     else
-        echo "wrong"
+        _debug "Fetching shared runner token"
         token=$(get_shared_runner_token)
     fi
 
