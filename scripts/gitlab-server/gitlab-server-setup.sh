@@ -183,7 +183,7 @@ output_json(){
                   --arg vm "$SERVER_NAME" \
                   --arg vmpub "$SERVER_PUBLIC_IP" \
                   --arg vmpriv "$PRIVATE_IP" \
-                  --arg u "$USER" \
+                  --arg u "gitlab" \
                   --arg fqdn "$FQDN" \
                   --arg ssh "$SSH_PUBLIC_KEY_FILE_PATH" \
                   '{resourceGroup: $rg, vmName: $vm, vmPublicIp: $vmpub, vmPrivateIp: $vmpriv, user: $u, fqdn: $fqdn, sshKey: $ssh}' )
