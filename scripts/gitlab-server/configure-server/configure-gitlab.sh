@@ -4,6 +4,7 @@
 declare PUBLIC_IP=""
 declare FQDN=""
 declare ROOT_ADMIN_PASSWORD=""
+declare DEBUG_FLAG=false
 PATH_TO_GITLAB_RB=/etc/gitlab/gitlab.rb
 
 source ../lib/shell_logger.sh
