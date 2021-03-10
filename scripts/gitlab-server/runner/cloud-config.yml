@@ -1,0 +1,14 @@
+#cloud-config
+package_upgrade: true
+
+packages:
+    - docker.io
+    - docker-compose
+
+groups:
+    - docker
+
+users:
+    - default
+    - name: gitlab
+      groups: docker

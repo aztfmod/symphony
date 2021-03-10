@@ -145,14 +145,15 @@ shArgs.parse(){
     local input_string=$@
     local char=""
     local tmp=""
-
+    local previousChar=""
+    
     for (( i=0; i<${#input_string}; i++ )); do
         char=${input_string:$i:1}    
 
         if [ "$char" == "-" ]; then
             if [ "$i" -gt "0"  ]; then
-                char2=${input_string:$i-1:1}   
-                if [ "$char2" == " " ]; then
+                previousChar=${input_string:$i-1:1}   
+                if [ "$previousChar" == " " ]; then
                     if [ ! -z "$tmp" ]; then
                         _processLine "$tmp"
                         tmp=""
