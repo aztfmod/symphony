@@ -80,6 +80,8 @@ main(){
 
     get_private_ip
 
+    output_json
+
     print_summary
 }
 
@@ -173,6 +175,20 @@ print_summary(){
 
                 
     _information "$_summary" 1>&2
+}
+
+output_json(){
+    json=$( jq -n \
+                  --arg rg "$RESOURCE_GROUP" \
+                  --arg vm "$SERVER_NAME" \
+                  --arg vmpub "$SERVER_PUBLIC_IP" \
+                  --arg vmpriv "$PRIVATE_IP" \
+                  --arg u "$USER" \
+                  --arg fqdn "$FQDN" \
+                  --arg ssh "$SSH_PUBLIC_KEY_FILE_PATH" \
+                  '{resourceGroup: $rg, vmName: $vm, vmPublicIp: $vmpub, vmPrivateIp: $vmpriv, user: $u, fqdn: $fqdn, sshKey: $ssh}' )
+    
+    echo $json > "${RESOURCE_GROUP}-${SERVER_NAME}.json"
 }
 
 main
