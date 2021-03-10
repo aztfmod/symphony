@@ -18,6 +18,7 @@ declare ALLOW_ACCESS_TO_IP_ADDRESSES=""
 declare NSG_NAME=""
 declare SERVER_PUBLIC_IP=""
 declare SERVER_PUBLIC_IP_NAME=""
+declare FQDN=""
 declare DEBUG_FLAG=false
 
 
@@ -75,6 +76,8 @@ main(){
         lookup_public_ip_address_name
         configure_server_dns_label
     fi
+
+    print_summary
 }
 
 check_inputs(){ 
@@ -139,11 +142,29 @@ lookup_public_ip_address_name(){
     SERVER_PUBLIC_IP_NAME=`az network public-ip list -g $RESOURCE_GROUP --query "[?ipAddress=='${SERVER_PUBLIC_IP}'].name" -o tsv`
 
     _debug "Public Ip Name is ${SERVER_PUBLIC_IP_NAME}"
+
+
 }
 
 configure_server_dns_label(){
 
     az network public-ip update -g $RESOURCE_GROUP -n $SERVER_PUBLIC_IP_NAME --dns-name $DNS_LABEL --allocation-method Static
+
+    FQDN=$(az network public-ip show -g $RESOURCE_GROUP -n ${SERVER_PUBLIC_IP_NAME} --query dnsSettings.fqdn -o tsv)
+}
+
+print_summary(){
+    _summary=" Summary: $me \n
+         RESOURCE GROUP: ${RESOURCE_GROUP}
+                VM NAME: ${SERVER_NAME}
+                  VM IP: ${SERVER_PUBLIC_IP}
+                   USER: gitlab
+                   FQDN: ${FQDN}
+    SSH PUBLIC KEY FILE: ${SSH_PUBLIC_KEY_FILE_PATH}
+"
+
+                
+    _information "$_summary" 1>&2
 }
 
 main
