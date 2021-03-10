@@ -1,11 +1,13 @@
 # Configure a GitLab environment that supports CAF/Lucidity Development
 
-This document describes the steps needed to create a GitLab server in your Azure account. 
+This document describes the steps needed to create a GitLab server in your Azure account.
 
 ## On Local WSL1/2 or Linux Instance
+
 ### Pre-requisites
 
 - This GitLab instance is created from a Bitnami image and requires the installer to accept the terms of the license. Login to az and run the following to accept the terms if not previously accepted.
+
 ```bash
 az login
 
@@ -17,9 +19,10 @@ az vm image terms accept \
 
 - Create a DNS entry (doc it)
 
+### Run the gitlab server deployment
 
-### Run the gitlab server deployment 
- - Server creation script [gitlab-server-setup.sh](./gitlab-server-setup.sh)
+- Server creation script [gitlab-server-setup.sh](./gitlab-server-setup.sh)
+
 ```bash
 cd scripts/gitlab-server
 
@@ -36,9 +39,12 @@ cd scripts/gitlab-server
     -i "##.##.##.#0 ##.##.##.#1 ##.##.##.#2" \  # Router public IP list for inbound access to instance (required)
     -c my-gitlab-server1 \                      # GitLab instance DNS name label (required)
     -d                                          # Debug flag (optional)
+
 ```
-The server is now created and you can confirm by reviewing your Azure account for the available resources:    
-```
+
+The server is now created and you can confirm by reviewing your Azure account for the available resources:
+
+```bash
 Azure
     / gitlab-test-rg
         / gitlab-server
@@ -48,7 +54,9 @@ Azure
         / gitlab-serverVMNic
         / gitlab-serverVNET
 ```
+
 Copy files from the configure-server folder over to the GitLab-Server vm via scp.
+
 ```bash
 # scripts/gitlab-server folder
 
@@ -64,18 +72,19 @@ Copy files from the configure-server folder over to the GitLab-Server vm via scp
     -r \                                              # Remove first flag (optional) 
     -d                                                # Debug flag (optional)
 ```
+
 ## On GitLab Server via SSH
 
-Detailed step walk-through provided below using the following script files. 
-  - Server setup [scripts in configure-server](./configure-server)
-    - [configure-gitlab.sh](./configure-server/configure-gitlab.sh)
-    - [fetch-gitlab-token.sh](./configure-server/fetch-gitlab-token.sh)
-    - [create-account(s).sh](./configure-server/create-account.sh)
-    - [create-environment(s).sh](./configure-server/create-environment.sh)
+Detailed step walk-through provided below using the following script files.
 
-
+- Server setup [scripts in configure-server](./configure-server)
+  - [configure-gitlab.sh](./configure-server/configure-gitlab.sh)
+  - [fetch-gitlab-token.sh](./configure-server/fetch-gitlab-token.sh)
+  - [create-account(s).sh](./configure-server/create-account.sh)
+  - [create-environment(s).sh](./configure-server/create-environment.sh)
 
 SSH into the GitLab server.
+
 ```bash
 ssh gitlab@my-gitlab-server1.eastus2.cloudapp.azure.com
 
@@ -102,6 +111,7 @@ bitnami@gitlab-server:~$
 ```
 
 Script 1 - configure GitLab
+
 ```bash
 cd configure-server/
 
@@ -119,6 +129,7 @@ cd configure-server/
 ```
 
 Script 2 - retrieve tokens for runner agents
+
 ```bash
 # Shared token
 ./fetch-gitlab-token.sh
@@ -135,6 +146,7 @@ Script 2 - retrieve tokens for runner agents
 ```
 
 Script 3 - add users to GitLab instance
+
 ```bash
 # Add user
 ./create-account.sh \
@@ -153,13 +165,6 @@ Script 3 - add users to GitLab instance
 
 # Repeat this command for each new user.
 ```
-
-Script 4 - create a new environment
-```bash
-# Add user
-./create-environment.sh     # Pending completion
-```
-
 
 ### Generate a certificate for the dns entry with letsencrypt (doc it)
 
@@ -192,7 +197,8 @@ Script 4 - create a new environment
 
 ## Configurable parameters
 
--use self signed cert
+Use self signed cert
+
 - region
 - subscription
 - gitlab server sku
@@ -222,26 +228,3 @@ Script 4 - create a new environment
 - provision runners min 1 per landing zone (msi)
 - register runners
 - assign managed identity to runner VM after boot
-
-## provision launchpad and caf foundations
-
-- TODO
-
-## Configurable parameters
-
-- region
-- subscription
-- gitlab server sku
-- gitlab server dns
-- IPs for users accessing server and runners
-- accounts
-- environments
-- gitlab runner sku
-- 1 or 5 runners
-
-## Acceptance Criteria
-
-- gitlab server provisioned
-- runner vms provisioned and connected to server
-- runners provisioned on vms (priority is 1 vm to start for MVP)
-- msi configured
