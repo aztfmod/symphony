@@ -2,7 +2,8 @@
 
 This document describes the steps needed to create a GitLab server in your Azure account. 
 
-## Pre-requisites
+## On Local WSL1/2 or Linux Instance
+### Pre-requisites
 
 - This GitLab instance is created from a Bitnami image and requires the installer to accept the terms of the license. Login to az and run the following to accept the terms if not previously accepted.
 ```bash
@@ -16,8 +17,9 @@ az vm image terms accept \
 
 - Create a DNS entry (doc it)
 
-## Steps to complete buildout
-  - Run the gitlab server deployment [gitlab-server-setup.sh](./gitlab-server-setup.sh)
+
+### Run the gitlab server deployment 
+ - Server creation script [gitlab-server-setup.sh](./gitlab-server-setup.sh)
 ```bash
 cd scripts/gitlab-server
 
@@ -46,9 +48,10 @@ Azure
         / gitlab-serverVMNic
         / gitlab-serverVNET
 ```
-
 Copy files from the configure-server folder over to the GitLab-Server vm via scp.
 ```bash
+# scripts/gitlab-server folder
+
 ./scp-to-server.sh \
     -f my-gitlab-server1.eastus2.cloudapp.azure.com \
     -s ./configure-server \
@@ -61,8 +64,18 @@ Copy files from the configure-server folder over to the GitLab-Server vm via scp
     -r \                                              # Remove first flag (optional) 
     -d                                                # Debug flag (optional)
 ```
+## On GitLab Server via SSH
 
-Once the files are copied, SSH into the GitLab server and run the following setup scripts.
+Detailed step walk-through provided below using the following script files. 
+  - Server setup [scripts in configure-server](./configure-server)
+    - [configure-gitlab.sh](./configure-server/configure-gitlab.sh)
+    - [fetch-gitlab-token.sh](./configure-server/fetch-gitlab-token.sh)
+    - [create-account(s).sh](./configure-server/create-account.sh)
+    - [create-environment(s).sh](./configure-server/create-environment.sh)
+
+
+
+SSH into the GitLab server.
 ```bash
 ssh gitlab@my-gitlab-server1.eastus2.cloudapp.azure.com
 
@@ -137,6 +150,8 @@ Script 3 - add users to GitLab instance
     -e jdoe@microsoft.com \  # EMail address (required)
     -a true \                # Administrator flag (true | false, default false)
     -d                       # Debug flag (optional)
+
+# Repeat this command for each new user.
 ```
 
 Script 4 - create a new environment
