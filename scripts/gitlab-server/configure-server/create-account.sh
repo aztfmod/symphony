@@ -77,9 +77,12 @@ EOF
 }
 
 create_account(){
-    sudo gitlab-rails runner "User.create!(:username => '${USERNAME}', \
+    sudo gitlab-rails runner -e production "User.create!(:username => '${USERNAME}', \
         :password => '${PASSWORD}', :password_confirmation => '${PASSWORD}', \
         :email => '${EMAIL_ADDRESS}', :name => '${NAME}', :admin => ${IS_ADMIN})"
+
+    #Confirm the user since we do not setup email.
+    sudo gitlab-rails runner -e production "user = User.find_by_username '${USERNAME}'; user.confirm;"
 }
 
 main(){
