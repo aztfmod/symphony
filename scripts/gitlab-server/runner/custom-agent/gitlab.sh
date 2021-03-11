@@ -9,13 +9,14 @@ function finally {
 
 trap finally EXIT SIGTERM
 
-if [ -n "${AGENT_TOKEN}" ]; then
-  echo "Connect to Azure AD using AGENT_TOKEN"
-else
-  echo "Connect to Azure AD using MSI ${MSI_ID}"
-  az login --identity -u ${MSI_ID} --allow-no-subscriptions
+# perform login using msid
+# in pipeline we are now able to auth via simply invoking ` az login --identity `
+az login --identity -u ${MSI_ID} --allow-no-subscriptions
 
-  # Get PAT token from KeyVault if not provided from the VSTS_AGENT_INPUT_TOKEN
+if [ -n "${AGENT_TOKEN}" ]; then
+  echo "Found AGENT_TOKEN variable for GitLab. Skipping KeyVault Fetch"
+else
+  echo "Fetching GitLab AGENT_TOKEN using MSI ${MSI_ID} from KeyVault: ${AGENT_KEYVAULT_NAME}"
   AGENT_TOKEN=$(az keyvault secret show -n ${AGENT_KEYVAULT_SECRET} --vault-name ${AGENT_KEYVAULT_NAME} -o json | jq -r .value)
 fi
 
