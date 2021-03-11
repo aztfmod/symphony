@@ -30,4 +30,10 @@ print_banner(){
      |___/          |_|                      |___/                                                         
 
 EOF
+
+  echo "                                     version: $(cat ../lib/version.txt)"
+  echo ""                                                         
+  echo "Symphony allows you to easily deploy infrastructure via GitLab using the"
+  echo "Cloud Adoption Framework (CAF) for Azure landing zones on Terraform.  "                                                         
+  echo ""    
 }

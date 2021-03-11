@@ -22,13 +22,11 @@ declare FQDN=""
 declare PRIVATE_IP=""
 declare DEBUG_FLAG=false
 
-
 # includes
 source ./update-firewall.sh
-source ./gitlab-server-utils.sh
 source ../lib/shell_logger.sh
 source ../lib/sh_arg.sh
-
+source ../lib/utils.sh
 
 # register &  arguments
 shArgs.arg "RESOURCE_GROUP" -g --group PARAMETER true
@@ -46,10 +44,10 @@ shArgs.arg "DEBUG_FLAG" -d --debug FLAG true
 shArgs.parse $@
 
 main(){
+    print_banner
     verify_tool_exists "az"
-    SUBSCRIPTION_ID=$(az account show --query "{id:id}" -o tsv)
-
     check_inputs
+    check_az_is_logged_in
 
     FULL_IMAGE_NAME=$(lookup_image_urn)
 
@@ -83,34 +81,6 @@ main(){
     output_json
 
     print_summary
-}
-
-check_inputs(){ 
-    _debug_line_break
-    _debug "       Resource Group : $RESOURCE_GROUP"
-    _debug "          Server Name : $SERVER_NAME"
-    _debug "                  Sku : $SKU"
-    _debug "             Location : $LOCATION"
-    _debug "          Image Offer : $IMAGE_OFFER"
-    _debug "      Image Publisher : $IMAGE_PUBLISHER"
-    _debug "  SSH Public Key path : $SSH_PUBLIC_KEY_FILE_PATH"
-    _debug "  IP Addresses(Allow) : ${ALLOW_ACCESS_TO_IP_ADDRESSES}"
-    _debug "            DNS Label : ${DNS_LABEL}"
-    _debug "                Debug : $DEBUG_FLAG"
-    _debug_line_break
-
-    if [ -z "$RESOURCE_GROUP" ]; then
-        _error "Resource Group is required!"
-        usage
-    fi
-    if [ -z "$LOCATION" ]; then
-        _error "Location is required!"
-        usage
-    fi 
-    if [ -z "$ALLOW_ACCESS_TO_IP_ADDRESSES" ]; then
-        _error "IP Address list is required!"
-        usage
-    fi  
 }
 
 lookup_image_urn(){
@@ -171,9 +141,7 @@ print_summary(){
                    USER: gitlab
                    FQDN: ${FQDN}
     SSH PUBLIC KEY FILE: ${SSH_PUBLIC_KEY_FILE_PATH}
-"
-
-                
+"                
     _information "$_summary" 1>&2
 }
 
@@ -190,5 +158,60 @@ output_json(){
     
     echo $json > "${RESOURCE_GROUP}-${SERVER_NAME}.json"
 }
+
+check_inputs(){ 
+    _debug_line_break
+    _debug "       Resource Group : $RESOURCE_GROUP"
+    _debug "          Server Name : $SERVER_NAME"
+    _debug "                  Sku : $SKU"
+    _debug "             Location : $LOCATION"
+    _debug "          Image Offer : $IMAGE_OFFER"
+    _debug "      Image Publisher : $IMAGE_PUBLISHER"
+    _debug "  SSH Public Key path : $SSH_PUBLIC_KEY_FILE_PATH"
+    _debug "  IP Addresses(Allow) : ${ALLOW_ACCESS_TO_IP_ADDRESSES}"
+    _debug "            DNS Label : ${DNS_LABEL}"
+    _debug "                Debug : $DEBUG_FLAG"
+    _debug_line_break
+
+    if [ -z "$RESOURCE_GROUP" ]; then
+        _error "Resource Group is required!"
+        usage
+    fi
+    if [ -z "$LOCATION" ]; then
+        _error "Location is required!"
+        usage
+    fi 
+    if [ -z "$ALLOW_ACCESS_TO_IP_ADDRESSES" ]; then
+        _error "IP Address list is required!"
+        usage
+    fi  
+}
+
+usage() {
+    local azStatusMessage
+    if [ -x "$(command -v az)" ]; then
+        azStatusMessage=$(_success "installed - you're good to go!")
+    else
+        azStatusMessage=$(_error "not installed")
+    fi    
+
+    _helpText=" Usage: $me
+  -g  | --group <Resource_Group_name>    REQUIRED Resource group to place the MSI in.
+  -l  | --location <azure location>      REQUIRED: Azure region.
+  -i  | --ips  <IP Address list>         REQUIRED: List of IP addresses to allow thrue firewall.  (delimiter is space \"a b c\")
+  -o  | --offer <image offer>            OPTIONAL: Name of gitlab offer.  (Default is gitlab).
+  -p  | --publisher <image publisher>    OPTIONAL: Name of publisher.  (Default is Bitnami).
+  -k  | --key <SSH public key file>      OPTIONAL: path to SSH public key.  (Default is ~/.ssh/id_rsa.pub).
+  -n  | --name  <server name>            OPTIONAL: Name you want the gitlab server to use.  (Default is gitlab-server)
+  -c  | --use-self-signed-cert <label>   OPTIONAL: Configure DNS label.  Must run script post deployment to configure gitlab to use self-signed cert.
+  -s  | --sku  <environment name>        OPTIONAL: VM Sku.  (Default is Standard_D4s_v3)
+  -d  | --debug                          OPTIONAL: Flag to turn debug logging on.
+   
+   dependencies:
+   -az $azStatusMessage"
+                
+    _information "$_helpText" 1>&2
+    exit 1
+}  
 
 main

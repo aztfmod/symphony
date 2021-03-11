@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 #set -euo pipefail
 
+# variables
 declare PUBLIC_IP=""
 declare FQDN=""
 declare ROOT_ADMIN_PASSWORD=""
 declare DEBUG_FLAG=false
-PATH_TO_GITLAB_RB=/etc/gitlab/gitlab.rb
+declare PATH_TO_GITLAB_RB=/etc/gitlab/gitlab.rb
 
+# includes
 source ../lib/shell_logger.sh
 source ../lib/sh_arg.sh
+source ../lib/utils.sh
 
+# register &  arguments
 shArgs.arg "FQDN" -f --fqdn PARAMETER true
 shArgs.arg "PUBLIC_IP" -i --ip PARAMETER true
 shArgs.arg "ROOT_ADMIN_PASSWORD" -p --rootPassword PARAMETER true
@@ -41,8 +45,6 @@ check_inputs(){
 }
 
 usage() {
-    print_banner  
-
     _helpText=" Usage: $me
 
   -i  | --ip <Server Public IP>               REQUIRED: Public IP of gitlab server
@@ -54,20 +56,6 @@ usage() {
     _information "$_helpText" 1>&2
     exit 1
 }  
-
-print_banner(){
-  cat << "EOF"
-                           _                       
-                          | |                      
- ___ _   _ _ __ ___  _ __ | |__   ___  _ __  _   _ 
-/ __| | | | '_ ` _ \| '_ \| '_ \ / _ \| '_ \| | | |
-\__ \ |_| | | | | | | |_) | | | | (_) | | | | |_| |
-|___/\__, |_| |_| |_| .__/|_| |_|\___/|_| |_|\__, |
-      __/ |         | |                       __/ |
-     |___/          |_|                      |___/                                                         
-
-EOF
-}
 
 replace_external_url(){
     SEARCH_STRING="external_url "
@@ -102,6 +90,8 @@ reset_root_password(){
 }
 
 main(){
+    print_banner
+    
     check_inputs
 
     replace_external_url
@@ -111,7 +101,6 @@ main(){
     sudo gitlab-ctl reconfigure
 
     reset_root_password
-
 }
 
 main

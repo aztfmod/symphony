@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #set -euo pipefail
 
+# variables
 declare USERNAME=""
 declare NAME=""
 declare EMAIL_ADDRESS=""
@@ -8,9 +9,12 @@ declare PASSWORD="P@ssword1!"
 declare IS_ADMIN=false
 declare DEBUG_FLAG=false
 
+# includes
 source ../lib/shell_logger.sh
 source ../lib/sh_arg.sh
+source ../lib/utils.sh
 
+# register &  arguments
 shArgs.arg "USERNAME" -u --username PARAMETER true
 shArgs.arg "NAME" -n --name PARAMETER true
 shArgs.arg "EMAIL_ADDRESS" -e --email PARAMETER true
@@ -45,8 +49,6 @@ check_inputs(){
 }
 
 usage() {
-    print_banner  
-
     _helpText=" Usage: $me
 
   -u  | --username <username>           REQUIRED: User name
@@ -62,20 +64,6 @@ usage() {
     exit 1
 }  
 
-print_banner(){
-  cat << "EOF"
-                           _                       
-                          | |                      
- ___ _   _ _ __ ___  _ __ | |__   ___  _ __  _   _ 
-/ __| | | | '_ ` _ \| '_ \| '_ \ / _ \| '_ \| | | |
-\__ \ |_| | | | | | | |_) | | | | (_) | | | | |_| |
-|___/\__, |_| |_| |_| .__/|_| |_|\___/|_| |_|\__, |
-      __/ |         | |                       __/ |
-     |___/          |_|                      |___/                                                         
-
-EOF
-}
-
 create_account(){
     sudo gitlab-rails runner -e production "User.create!(:username => '${USERNAME}', \
         :password => '${PASSWORD}', :password_confirmation => '${PASSWORD}', \
@@ -83,9 +71,13 @@ create_account(){
 
     #Confirm the user since we do not setup email.
     sudo gitlab-rails runner -e production "user = User.find_by_username '${USERNAME}'; user.confirm;"
+
+    echo "Account created!"
 }
 
 main(){
+    print_banner
+
     check_inputs
 
     create_account

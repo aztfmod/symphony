@@ -3,37 +3,24 @@
 
 declare me=`basename "$0"`
 
-
+# variables
 declare MODE="shared"
 declare REPO_NAME=""
 declare DEBUG_FLAG=false
 
+# includes
 source ../lib/shell_logger.sh
 source ../lib/sh_arg.sh
+source ../lib/utils.sh
 
+# register &  arguments
 shArgs.arg "MODE" -m --mode PARAMETER true
 shArgs.arg "REPO_NAME" -r --repository PARAMETER true
 shArgs.arg "DEBUG_FLAG" -d --debug FLAG true
 
 shArgs.parse $@
 
-print_banner(){
-  cat << "EOF"
-                           _                       
-                          | |                      
- ___ _   _ _ __ ___  _ __ | |__   ___  _ __  _   _ 
-/ __| | | | '_ ` _ \| '_ \| '_ \ / _ \| '_ \| | | |
-\__ \ |_| | | | | | | |_) | | | | (_) | | | | |_| |
-|___/\__, |_| |_| |_| .__/|_| |_|\___/|_| |_|\__, |
-      __/ |         | |                       __/ |
-     |___/          |_|                      |___/                                                         
-
-EOF
-}
-
 usage() {
-    print_banner  
-
     _helpText=" Usage: $me
 
   -m  | --mode <shared or project>      OPTIONAL: should be either shared or project, if project repository should be specified
@@ -70,6 +57,8 @@ get_project_runner_token(){
 }
 
 main(){
+    print_banner
+
     check_inputs
 
     if [ $MODE == "project" ]; then
@@ -84,4 +73,3 @@ main(){
 }
 
 main
-

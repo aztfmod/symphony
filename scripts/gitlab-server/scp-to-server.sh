@@ -3,6 +3,7 @@
 
 declare me=`basename "$0"`
 
+# variables
 declare SOURCE_DIRECTORY=./configure-server
 declare TARGET_DIRECTORY=""
 declare FQDN=""
@@ -11,9 +12,12 @@ declare USER="gitlab"
 declare REMOVE_FIRST=false
 declare DEBUG_FLAG=false
 
+# includes
 source ../lib/shell_logger.sh
 source ../lib/sh_arg.sh
+source ../lib/utils.sh
 
+# register &  arguments
 shArgs.arg "FQDN" -f --fqdn PARAMETER true
 shArgs.arg "SOURCE_DIRECTORY" -d --directory PARAMETER true
 shArgs.arg "SSH_PUBLIC_KEY_FILE" -k --key PARAMETER true
@@ -22,6 +26,29 @@ shArgs.arg "REMOVE_FIRST" -r --removeFirst FLAG true
 shArgs.arg "DEBUG_FLAG" -d --debug FLAG true
 
 shArgs.parse $@
+
+main(){
+    print_banner  
+    check_inputs
+
+    TARGET_DIRECTORY=$(echo ${SOURCE_DIRECTORY} | sed '0,/.\//s///')
+    target="${USER}@${FQDN}:/home/${USER}/"
+    remHost="${USER}@${FQDN}"
+    remDir="/home/${USER}/${TARGET_DIRECTORY}"
+
+    if [ $REMOVE_FIRST == "true" ]; then
+        _information "Removing directory ${remDir} on host."
+        ssh -i $SSH_PUBLIC_KEY_FILE $remHost "rm -rf ${remDir}"
+    fi
+
+    _debug "scp'ing files in directory ${SOURCE_DIRECTORY} to ${target}"
+    scp -i $SSH_PUBLIC_KEY_FILE -r ${SOURCE_DIRECTORY} ${target}
+
+    remDir="/home/${USER}/lib"
+
+    # copy over lib folder
+    scp -i $SSH_PUBLIC_KEY_FILE -r ../lib $target
+}
 
 check_inputs(){ 
     _debug_line_break
@@ -44,8 +71,6 @@ check_inputs(){
 }
 
 usage() {
-    print_banner  
-
     _helpText=" Usage: $me
 
   -f  | --fqdn <Fully Qualified Domain Name>  REQUIRED: Fully qualified domain name of gitlab server
@@ -58,43 +83,6 @@ usage() {
                 
     _information "$_helpText" 1>&2
     exit 1
-}  
-
-print_banner(){
-  cat << "EOF"
-                           _                       
-                          | |                      
- ___ _   _ _ __ ___  _ __ | |__   ___  _ __  _   _ 
-/ __| | | | '_ ` _ \| '_ \| '_ \ / _ \| '_ \| | | |
-\__ \ |_| | | | | | | |_) | | | | (_) | | | | |_| |
-|___/\__, |_| |_| |_| .__/|_| |_|\___/|_| |_|\__, |
-      __/ |         | |                       __/ |
-     |___/          |_|                      |___/                                                         
-
-EOF
-}
-
-
-main(){
-    check_inputs
-
-    TARGET_DIRECTORY=$(echo ${SOURCE_DIRECTORY} | sed '0,/.\//s///')
-    target="${USER}@${FQDN}:/home/${USER}/"
-    remHost="${USER}@${FQDN}"
-    remDir="/home/${USER}/${TARGET_DIRECTORY}"
-
-    if [ $REMOVE_FIRST == "true" ]; then
-        _information "Removing directory ${remDir} on host."
-        ssh -i $SSH_PUBLIC_KEY_FILE $remHost "rm -rf ${remDir}"
-    fi
-
-    _debug "scp'ing files in directory ${SOURCE_DIRECTORY} to ${target}"
-    scp -i $SSH_PUBLIC_KEY_FILE -r ${SOURCE_DIRECTORY} ${target}
-
-    remDir="/home/${USER}/lib"
-
-    # copy over lib folder
-    scp -i $SSH_PUBLIC_KEY_FILE -r ../lib $target
 }
 
 main
