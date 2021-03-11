@@ -20,9 +20,9 @@ declare GITLAB_DOMAIN=""
 declare GITLAB_URL=""
 
 # includes
-source ../lib/utils.sh
 source ../lib/shell_logger.sh
 source ../lib/sh_arg.sh
+source ../lib/utils.sh
 
 # register &  arguments
 shArgs.arg "DEBUG_FLAG" -d --debug FLAG true
@@ -37,6 +37,7 @@ shArgs.arg "SERVER_INTERNAL_IP" -si --server-ip PARAMETER true
 shArgs.parse $@
 
 main(){
+    print_banner
     verify_tool_exists "az"
     check_inputs
     check_az_is_logged_in
@@ -159,6 +160,11 @@ check_public_key(){
   fi
 }
 
+_az(){
+  local command=$@
+  az $command
+}
+
 check_inputs(){ 
     GITLAB_URL="https://$GITLAB_DOMAIN/"  
     _debug_line_break
@@ -187,13 +193,7 @@ check_inputs(){
 
 }
 
-_az(){
-  local command=$@
-  az $command
-}
-
 usage() {
-    print_banner  
     local azStatusMessage
     if [ -x "$(command -v az)" ]; then
         azStatusMessage=$(_success "installed - you're good to go!")
@@ -211,4 +211,3 @@ usage() {
 }  
 
 main
-
