@@ -34,7 +34,7 @@ cd scripts/gitlab-server
     -g gitlab-test-rg \                         # Deployment resource group name (required)
     -l eastus2 \                                # Deployment location (required) (required)
     -i "##.##.##.#0 ##.##.##.#1 ##.##.##.#2" \  # Router public IP list for inbound access to instance (required)
-    -c my-gitlab-server1 \                      # GitLab instance DNS name label
+    -c my-gitlab-server1 \                      # GitLab instance DNS name label (required)
     -d                                          # Debug flag (optional)
 ```
 The server is now created and you can confirm by reviewing your Azure account for the available resources:    
