@@ -19,14 +19,15 @@ shArgs.parse $@
 main(){
     check_inputs
 
-    resourceGroups=($(az group list --query "[?tags.environment=='$ENVIRONMENT' && tags.landingzone].{Name:name}" -o tsv))
+    resourceGroups=$(az group list --query "[?tags.environment=='$ENVIRONMENT' && tags.landingzone].{Name:name}" -o tsv)
     if [ ${#resourceGroups[@]} -eq 0 ]; then
         _information "No Resource Groups found for CAF env $ENVIRONMENT!"
         _line_break
         exit 0
     fi     
-
+    echo $resourceGroups
     _danger "**** Confirm Delete of CAF Resources ****"
+    _danger "RGs to delete: $resourceGroups"
     _danger "Environment: $ENVIRONMENT"    
     _line_break
 
@@ -37,7 +38,7 @@ main(){
         for group in $resourceGroups
         do
           _information "az group delete -n $group --yes --no-wait"
-          #az group delete -n $group --yes --no-wait
+          az group delete -n $group --yes --no-wait
         done
 
         _success "Deleted Resource Groups for CAF env $ENVIRONMENT"    
