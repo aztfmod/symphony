@@ -10,4 +10,4 @@
 
 #tmp data
 .data
-**/*server.json
+scripts/gitlab-server/*-*.json
