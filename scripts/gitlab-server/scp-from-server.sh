@@ -3,7 +3,7 @@
 
 declare me=`basename "$0"`
 
-declare TARGET_DIRECTORY="./files-from-server"
+declare TARGET_DIRECTORY="../../.data"
 declare FQDN=""
 declare SSH_PUBLIC_KEY_FILE="~/.ssh/id_rsa"
 declare USER="gitlab"

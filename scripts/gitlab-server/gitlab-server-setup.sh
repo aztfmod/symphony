@@ -20,6 +20,7 @@ declare SERVER_PUBLIC_IP=""
 declare SERVER_PUBLIC_IP_NAME=""
 declare FQDN=""
 declare PRIVATE_IP=""
+declare DATA_DIR="../../.data"
 declare DEBUG_FLAG=false
 
 # includes
@@ -146,6 +147,8 @@ print_summary(){
 }
 
 output_json(){
+    mkdir -p ${DATA_DIR}
+
     json=$( jq -n \
                   --arg rg "$RESOURCE_GROUP" \
                   --arg vm "$SERVER_NAME" \
@@ -156,7 +159,7 @@ output_json(){
                   --arg ssh "$SSH_PUBLIC_KEY_FILE_PATH" \
                   '{resourceGroup: $rg, vmName: $vm, vmPublicIp: $vmpub, vmPrivateIp: $vmpriv, user: $u, fqdn: $fqdn, sshKey: $ssh}' )
     
-    echo $json > "${RESOURCE_GROUP}-${SERVER_NAME}.json"
+    echo $json > "${DATA_DIR}/${RESOURCE_GROUP}-${SERVER_NAME}.json"
 }
 
 check_inputs(){ 
