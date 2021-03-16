@@ -63,12 +63,12 @@ You can confirm by reviewing your Azure subscription for the available resources
 
 Azure
     / gitlab-test-rg
-        / gitlab-server
-        / gitlab-server_OsDisk_1_a1b2c3...
-        / gitlab-serverNSG
-        / gitlab-serverPublicIP
-        / gitlab-serverVMNic
-        / gitlab-serverVNET
+        / my-gitlab-server
+        / my-gitlab-server_OsDisk_1_a1b2c3...
+        / my-gitlab-serverNSG
+        / my-gitlab-serverPublicIP
+        / my-gitlab-serverVMNic
+        / my-gitlab-serverVNET
 ```
 
 Copy files to the GitLab-Server vm using the scp-to-server.sh script found in the same working directory.   
