@@ -42,6 +42,8 @@ cd scripts/gitlab-server
     -c my-gitlab-server \                       # GitLab instance DNS name label (required)
     -d                                          # Debug flag (optional)
 
+Upon successful completion you will see the following:
+
    Summary: gitlab-server-setup.sh
          RESOURCE GROUP: gitlab-test-rg
                 VM NAME: my-gitlab-server
