@@ -31,14 +31,14 @@ cd scripts/gitlab-server
 ./gitlab-server-setup.sh \
     -g <resource-group-name> \
     -l <azure-location> \
-    -i "<client-ip-0> <client-ip-1> <client-ip-2>" \
+    -i "<user-ip-0> <user-ip-1> <user-ip-2>" \
     -c <gitlab-server-name> \
     -d
 
 # Parameter specifications
     -g gitlab-test-rg \                         # Deployment resource group name (required)
     -l eastus2 \                                # Deployment location (required) (required)
-    -i "00.00.00.00 11.11.11.11 22.22.22.22" \  # Router public IP list for inbound access to instance (required)
+    -i "00.00.00.00 11.11.11.11 22.22.22.22" \  # User router public IP list for Firewall inbound access to server (required)
     -c my-gitlab-server \                       # GitLab instance DNS name label (required)
     -d                                          # Debug flag (optional)
 
