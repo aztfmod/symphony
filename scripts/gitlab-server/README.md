@@ -106,14 +106,15 @@ SSH into the GitLab server.
 ```bash
 ssh <user>@<server-fqdn>
 
-# Parameter specifications
+# Parameter sample
 ssh gitlab@my-gitlab-server.eastus2.cloudapp.azure.com
 
 * Your first login will produce this security prompt, please enter 'yes' to continue: 
   
-    The authenticity of host '<server-fqdn> (<server-public-ip>)' can't be established.   
-    ECDSA key fingerprint is SHA256:<sha-key>.   
-    Are you sure you want to continue connecting (yes/no)? yes
+  The authenticity of host '<server-fqdn> (<server-public-ip>)' can't be established.   
+  ECDSA key fingerprint is SHA256:<sha-key>.   
+  Are you sure you want to continue connecting (yes/no)? yes
+  ...
     
     Linux gitlab-server <GitLab-version> #1 SMP Debian <Debian-version>
 
