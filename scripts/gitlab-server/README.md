@@ -2,11 +2,13 @@
 
 This document describes the steps needed to create a GitLab server in your Azure account.
 
+#### NOTE: Devcontainer implementation (pending!)
+
 ## On Local WSL1/2 or Linux Instance
 
 ### Pre-requisites
 
-- This GitLab instance is created from a Bitnami image and requires the installer to accept the terms of the license. Login to az and run the following to accept the terms if not previously accepted.
+- This GitLab instance is created from a Bitnami image and requires the installer to accept the terms of the license. Login to az and run the following to accept the terms if not previously accepted. This step only needs to be run once.
 
 ```bash
 az login
@@ -17,9 +19,9 @@ az vm image terms accept \
     --urn ${urn}
 ```
 
-- Create a DNS entry (doc it)
+- Create a DNS entry (pending!)
 
-### Run the gitlab server deployment
+### Run the GitLab server deployment
 
 - Server creation script [gitlab-server-setup.sh](./gitlab-server-setup.sh)
 
@@ -27,47 +29,63 @@ az vm image terms accept \
 cd scripts/gitlab-server
 
 ./gitlab-server-setup.sh \
-    -g gitlab-test-rg \
-    -l eastus2 \
-    -i "##.##.##.#0 ##.##.##.#1 ##.##.##.#2" \
-    -c my-gitlab-server1 \
+    -g <resource-group-name> \
+    -l <azure-location> \
+    -i "<user-00-ip> <user-01-ip> <user-02-ip>" \
+    -c <gitlab-server-name> \
     -d
 
 # Parameter specifications
     -g gitlab-test-rg \                         # Deployment resource group name (required)
     -l eastus2 \                                # Deployment location (required) (required)
-    -i "##.##.##.#0 ##.##.##.#1 ##.##.##.#2" \  # Router public IP list for inbound access to instance (required)
-    -c my-gitlab-server1 \                      # GitLab instance DNS name label (required)
+    -i "00.00.00.00 11.11.11.11 22.22.22.22" \  # User's router public IP list for Firewall inbound access to server (required)
+    -c my-gitlab-server \                       # GitLab instance DNS name label (required)
     -d                                          # Debug flag (optional)
 
+Upon successful completion you will see the following:
+
+   Summary: gitlab-server-setup.sh
+         RESOURCE GROUP: gitlab-test-rg
+                VM NAME: my-gitlab-server
+           VM PUBLIC IP: <server-public-ip>
+          VM PRIVATE IP: <server-private-ip>
+                   USER: gitlab
+                   FQDN: <server-fqdn>          # my-gitlab-server.eastus2.cloudapp.azure.com
+    SSH PUBLIC KEY FILE: ~/.ssh/id_rsa.pub
+
 ```
 
-The server is now created and you can confirm by reviewing your Azure account for the available resources:
+The server is now created, please note the values as they will be used in subsequent steps.    
+
+You can confirm by reviewing your Azure subscription for the available resources:
 
 ```bash
+
 Azure
     / gitlab-test-rg
-        / gitlab-server
-        / gitlab-server_OsDisk_1_a1b2c3...
-        / gitlab-serverNSG
-        / gitlab-serverPublicIP
-        / gitlab-serverVMNic
-        / gitlab-serverVNET
+        / my-gitlab-server
+        / my-gitlab-server_OsDisk_1_a1b2c3...
+        / my-gitlab-serverNSG
+        / my-gitlab-serverPublicIP
+        / my-gitlab-serverVMNic
+        / my-gitlab-serverVNET
 ```
 
-Copy files from the configure-server folder over to the GitLab-Server vm via scp.
+Copy files to the GitLab-Server vm using the scp-to-server.sh script found in the same working directory.   
+Folders copied:
+ - /configure-server
+ - /lib   
 
 ```bash
-# scripts/gitlab-server folder
 
 ./scp-to-server.sh \
-    -f my-gitlab-server1.eastus2.cloudapp.azure.com \
-    -s ./configure-server \
-    -d \
-    -r
+    -f <server-fqdn> \
+    -s <local-directory-to-copy> \
+    -r \
+    -d  
 
 # Parameter specifications
-    -f my-gitlab-server1.eastus2.cloudapp.azure.com \ # FDQN (use DNS name label and location specified above, required)
+    -f my-gitlab-server.eastus2.cloudapp.azure.com \  # FDQN (use DNS name label and location specified above, required)
     -s ./configure-server \                           # Directory to copy (required)
     -r \                                              # Remove first flag (optional) 
     -d                                                # Debug flag (optional)
@@ -86,26 +104,35 @@ Detailed step walk-through provided below using the following script files.
 SSH into the GitLab server.
 
 ```bash
-ssh gitlab@my-gitlab-server1.eastus2.cloudapp.azure.com
+ssh <user>@<server-fqdn>
 
-    Linux gitlab-server 4.19.0-14-cloud-amd64 #1 SMP Debian 4.19.171-2 (2021-01-30) x86_64
+# Parameter sample
+ssh gitlab@my-gitlab-server.eastus2.cloudapp.azure.com
+
+* Your first login will produce this security prompt, please enter 'yes' to continue: 
+  
+  The authenticity of host '<server-fqdn> (<server-public-ip>)' can't be established.   
+  ECDSA key fingerprint is SHA256:<sha-key>.   
+  Are you sure you want to continue connecting (yes/no)? yes
+  ...
+    
+    Linux gitlab-server <GitLab-version> #1 SMP Debian <Debian-version>
 
     The programs included with the Debian GNU/Linux system are free software;
     the exact distribution terms for each program are described in the
     individual files in /usr/share/doc/*/copyright.
 
-    Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-    permitted by applicable law.
-        ___ _ _                   _
+    Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent   
+    permitted by applicable law.   
+         ___ _ _                   _
         | _ |_) |_ _ _  __ _ _ __ (_)
         | _ \ |  _| ' \/ _` | '  \| |
         |___/_|\__|_|_|\__,_|_|_|_|_|
     
-    *** Welcome to the Bitnami GitLab CE 13.9.3-0                   ***
+    *** Welcome to the Bitnami GitLab <GitLab-version>              ***
     *** Documentation:  https://docs.bitnami.com/azure/apps/gitlab/ ***
     ***                 https://docs.bitnami.com/azure/             ***
     *** Bitnami Forums: https://community.bitnami.com/              ***
-    Last login: Wed Mar 00 00:00:00 2021 from ###.##.##.###
 
 bitnami@gitlab-server:~$ 
 ```
@@ -116,27 +143,27 @@ Script 1 - configure GitLab
 cd configure-server/
 
 ./configure-gitlab.sh \
-    -f my-gitlab-server1.eastus2.cloudapp.azure.com \
-    -i ##.##.##.### \
-    -p xxxxxxxxxxxx \
+    -f <server-fqdn> \
+    -i <server-public-ip> \
+    -p <strong-password> \
     -d
 
 # Parameter specifications
-    -f my-gitlab-server1.eastus2.cloudapp.azure.com \       # FQDN of gitlab-server (required)
-    -i ##.##.##.### \                                       # Public IP of gitlab-server (from Azure, required)
-    -p xxxxxxxxxxxx \                                       # Complex password for root admin (required)
+    -f my-gitlab-server.eastus2.cloudapp.azure.com \        # FQDN of gitlab-server (required)
+    -i 000.000.000.000 \                                    # Public IP of gitlab-server (from Azure, required)
+    -p P@ssword1! \                                         # Complex password for root admin (required)
     -d                                                      # Debug flag (optional)
 ```
 
 Script 2 - retrieve tokens for runner agents
 
 ```bash
-# Shared token
+# Server token
 ./fetch-gitlab-token.sh
 
-# ab12C-............Yz
+# ab12C-A1..........Yz
 
-# Project runner token with default GitLab values
+# Project token (with these default GitLab project values)
 ./fetch-gitlab-token.sh \
     -m project \
     -r Monitoring \
@@ -150,10 +177,10 @@ Script 3 - add users to GitLab instance
 ```bash
 # Add user
 ./create-account.sh \
-    -u myusername \
-    -n John Doe \
-    -e jdoe@microsoft.com \
-    -a true \
+    -u <username> \
+    -n <Full Name> \
+    -e <email> \
+    -a <true | false> \
     -d
 
 # Parameter specifications
