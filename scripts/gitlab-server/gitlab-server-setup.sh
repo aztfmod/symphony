@@ -151,7 +151,7 @@ print_summary(){
                 VM NAME: ${SERVER_NAME}
            VM PUBLIC IP: ${SERVER_PUBLIC_IP}
           VM PRIVATE IP: ${PRIVATE_IP}
-            SEVER TOKEN: ${SERVER_TOKEN}
+           SERVER TOKEN: ${SERVER_TOKEN}
                    USER: gitlab
                    FQDN: ${FQDN}
     SSH PUBLIC KEY FILE: ${SSH_PUBLIC_KEY_FILE_PATH}
