@@ -122,11 +122,6 @@ create_vm() {
     echo $result
 }
 
-add_ip_to_known_hosts()  {
-    _debug "adding $1 to known_hosts"
-    ssh-keyscan $1 >> ~/.ssh/known_hosts
-}
-
 wait_for_cloud_init_completion() {
     sleep 5
     local ip=$1
