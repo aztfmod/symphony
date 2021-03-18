@@ -20,6 +20,7 @@ declare SERVER_PUBLIC_IP=""
 declare SERVER_PUBLIC_IP_NAME=""
 declare FQDN=""
 declare PRIVATE_IP=""
+declare SERVER_TOKEN=""
 declare DATA_DIR="../../.data"
 declare DEBUG_FLAG=false
 
@@ -79,6 +80,9 @@ main(){
 
     get_private_ip
 
+    _information "Retrieving GitLab server token from ${FQDN}"
+    get_server_token
+
     output_json
 
     print_summary
@@ -133,12 +137,21 @@ get_private_ip(){
     PRIVATE_IP=$(az vm show -d -n $SERVER_NAME -g $RESOURCE_GROUP --query privateIps -o tsv)
 }
 
+get_server_token(){
+    add_ip_to_known_hosts "$SERVER_PUBLIC_IP"
+
+    SERVER_TOKEN=$(ssh -oStrictHostKeyChecking=no gitlab@${FQDN} 'sudo gitlab-rails runner -e production "puts Gitlab::CurrentSettings.current_application_settings.runners_registration_token"')
+
+    _debug "Server token is ${SERVER_TOKEN}"
+}
+
 print_summary(){
     _summary=" Summary: $me \n
          RESOURCE GROUP: ${RESOURCE_GROUP}
                 VM NAME: ${SERVER_NAME}
            VM PUBLIC IP: ${SERVER_PUBLIC_IP}
           VM PRIVATE IP: ${PRIVATE_IP}
+           SERVER TOKEN: ${SERVER_TOKEN}
                    USER: gitlab
                    FQDN: ${FQDN}
     SSH PUBLIC KEY FILE: ${SSH_PUBLIC_KEY_FILE_PATH}
@@ -157,7 +170,8 @@ output_json(){
                   --arg u "gitlab" \
                   --arg fqdn "$FQDN" \
                   --arg ssh "$SSH_PUBLIC_KEY_FILE_PATH" \
-                  '{resourceGroup: $rg, vmName: $vm, vmPublicIp: $vmpub, vmPrivateIp: $vmpriv, user: $u, fqdn: $fqdn, sshKey: $ssh}' )
+                  --arg tkn "$SERVER_TOKEN" \
+                  '{resourceGroup: $rg, vmName: $vm, vmPublicIp: $vmpub, vmPrivateIp: $vmpriv, user: $u, fqdn: $fqdn, sshKey: $ssh, token: $tkn}' )
     
     echo $json > "${DATA_DIR}/${RESOURCE_GROUP}-${SERVER_NAME}.json"
 }

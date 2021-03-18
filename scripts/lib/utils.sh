@@ -1,5 +1,10 @@
 declare me=`basename "$0"`
 
+add_ip_to_known_hosts()  {
+    _debug "adding $1 to known_hosts"
+    ssh-keyscan $1 >> ~/.ssh/known_hosts
+}
+
 verify_tool_exists() {
   local tool=$1
   if [ ! -x "$(command -v $tool)" ]; then
