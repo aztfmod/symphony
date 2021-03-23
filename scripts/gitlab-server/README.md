@@ -231,13 +231,9 @@ NOTE: As of this writing, the install.sh script contains the following:
  
  The expected parameters for gitlab-runner-setup.sh (shown below) need to be obtained from one or more locations/methods. 
  
- To get values for the parameters, 
- - Inspect the .json file exported into the /.data folder by the server setup process to observe the values in it, e.g. ./data/gitlab-server.json
- - Capture the token obtained from running fetch-gitlab-token.sh earlier. 
- - Capture the location of the .crt file generated earlier
+Inspect the .json file exported into the /.data folder by the server setup process to observe the values in it, e.g. ./data/gitlab-server.json
 
-e.g.
- ```json
+```json
 {
     "resourceGroup": "<resource-group>",
     "vmName": "<gitlab-server>",
@@ -245,13 +241,14 @@ e.g.
     "vmPrivateIp": "0.0.0.0",
     "user": "<gitlab-user>",
     "fqdn": "<server-fqdn>",
-    "sshKey": "<ssh-key>"
+    "sshKey": "<ssh-key>",
+    "token": "<token-value>"
 }
  ```
 
 To assign the following values in install.sh:
 * RESOURCE_GROUP: use the "resourceGroup" value from the .json file
-* GITLAB_TOKEN: use the token obtained from running fetch-gitlab-token.sh 
+* GITLAB_TOKEN: use the "token" value from the .json file
 * GITLAB_URL: use the "fqdn" value from the .json file
 * CERT_PATH: use the path for the .crt file exported by running scp-from-server.sh
 * SERVER_INTERNAL_IP: use the "vmPrivateIp" value from the .json file
@@ -287,10 +284,12 @@ This should invoke gitlab-runner-setup.sh, which has the following parameters:
     -f                                          # (OPTIONAL) full mode (5 VMs instead of 1)
 ```
 
-NOTE: The -f flag will invoke the creation of 5 VMs (instead of 1 VM), with 5 runners each. For a quick test, it is easier to leave out the -f parameter for faster results.
+NOTE: The -f flag will invoke the creation of 5 VMs (instead of 1 VM), with 5 runners each. For a quick test, it is easier to leave out the -f parameter for faster results. 5 VMs are configured in full mode to allow one pool of runners per CAF layers 0 to 4.
 
 To verify that the server and the runners have been created:
 1. Browse the resource group in the Azure portal to verify that the desired VMs have been created. 
-2. For each runner VM, navigate your browser to the Gitlab server and verify that the logon screen is visible.
-3. Register one or more users and then log in as a user to verify that the user experience is working as expected. 
+2. Observe the FQDN for each server VM, e.g. my-gitlab-server1.eastus2.cloudapp.azure.com
+3. For each runner VM, navigate your browser to the Gitlab server using the FQDN. 
+4. NOTE: You may receive a browser warning due to the self-signed certificate. Dismiss the warning to proceed and view the logon screen.
+5. Register one or more users and then log in as a user to verify that the user experience is working as expected. 
 
