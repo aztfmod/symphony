@@ -242,7 +242,7 @@ Inspect the .json file exported into the /.data folder by the server setup proce
     "user": "<gitlab-user>",
     "fqdn": "<server-fqdn>",
     "sshKey": "<ssh-key>",
-    "token": "<token-value>"
+    "token": "<gitlab-token>"
 }
  ```
 
