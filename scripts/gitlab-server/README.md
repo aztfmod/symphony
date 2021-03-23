@@ -192,3 +192,104 @@ Script 3 - add users to GitLab instance
 
 # Repeat this command for each new user.
 ```
+
+
+## Run the GitLab runner server deployment
+
+### Obtain the .crt file
+
+First, run the scp-from-server.sh script to obtain the .crt file needed for runner setup.
+
+```bash
+
+./scp-from-server.sh \
+    -f <server-fqdn> \
+    -d 
+
+# Parameter specifications
+    -f my-gitlab-server.eastus2.cloudapp.azure.com \  # FDQN (use DNS name label and location specified above, required)
+    -d                                                # Debug flag (optional)
+```
+
+Observe that the necessary .crt file exists within the .data folder:
+
+e.g.  
+```
+~/work/symphony/.data/ssl/server.crt
+```
+where /.data is at the root of your working folder.
+
+### Configure values for the runner setup 
+
+The runner server creation script [gitlab-runner-setup.sh](./gitlab-runner-setup.sh), is invoked by the [install.sh](./install.sh) script. 
+
+
+NOTE: As of this writing, the install.sh script contains the following:
+- (commented out) a call to gitlab-server-setup.sh
+- a set of values needed from the server VM
+- a call to gitlab-runner-setup.sh, with the necessary parameters
+ 
+ The expected parameters for gitlab-runner-setup.sh (shown below) need to be obtained from one or more locations/methods. 
+ 
+Inspect the .json file exported into the /.data folder by the server setup process to observe the values in it, e.g. ./data/gitlab-server.json
+
+```json
+{
+    "resourceGroup": "<resource-group>",
+    "vmName": "<gitlab-server>",
+    "vmPublicIp": "1.1.1.1",
+    "vmPrivateIp": "0.0.0.0",
+    "user": "<gitlab-user>",
+    "fqdn": "<server-fqdn>",
+    "sshKey": "<ssh-key>",
+    "token": "<gitlab-token>"
+}
+ ```
+
+To assign the following values in install.sh:
+* RESOURCE_GROUP: use the "resourceGroup" value from the .json file
+* GITLAB_TOKEN: use the "token" value from the .json file
+* GITLAB_URL: use the "fqdn" value from the .json file
+* CERT_PATH: use the path for the .crt file exported by running scp-from-server.sh
+* SERVER_INTERNAL_IP: use the "vmPrivateIp" value from the .json file
+ 
+ 
+### Kick off the runner setup 
+
+After assigning the necessary values in install.sh, run it as shown below:
+
+```bash
+./install.sh 
+```
+
+This should invoke gitlab-runner-setup.sh, which has the following parameters:
+
+```bash
+./gitlab-runner-setup.sh \
+    -g <resource-group-name> \
+    -d
+    -c <cert-path> \
+    -gt <gitlab-token> \
+    -gd <gitlab-url> \
+    -si <server-private-ip> \
+    -f 
+
+# Parameter specifications
+    -g gitlab-test-rg \                         # Deployment resource group name (required)
+    -d                                          # Debug flag (optional)
+    -c ~/work/symphony/.data/ssl/server.crt     # cert path (required)
+    -gt "abcde-fghijklmnopqrst"                 # gitlab token (required)
+    -gd "server.eastus.cloudapp.azure.com"      # gitlab server URL (required)
+    -si "00.00.00.00"                           # server's private IP (required)
+    -f                                          # (OPTIONAL) full mode (5 VMs instead of 1)
+```
+
+NOTE: The -f flag will invoke the creation of 5 VMs (instead of 1 VM), with 5 runners each. For a quick test, it is easier to leave out the -f parameter for faster results. 5 VMs are configured in full mode to allow one pool of runners per CAF layers 0 to 4.
+
+To verify that the server and the runners have been created:
+1. Browse the resource group in the Azure portal to verify that the desired VMs have been created. 
+2. Observe the FQDN for each server VM, e.g. my-gitlab-server1.eastus2.cloudapp.azure.com
+3. For each runner VM, navigate your browser to the Gitlab server using the FQDN. 
+4. NOTE: You may receive a browser warning due to the self-signed certificate. Dismiss the warning to proceed and view the logon screen.
+5. Register one or more users and then log in as a user to verify that the user experience is working as expected. 
+
