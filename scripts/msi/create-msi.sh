@@ -10,6 +10,7 @@ declare ENVIRONMENT=""
 declare DEBUG_FLAG=false
 declare LAUNCHPAD_RGS=
 declare MSI_PRINCIPAL_ID=""
+declare MSI_OBJECT_ID=""
 declare SUBSCRIPTION_ID=""
 
 # includes
@@ -33,10 +34,13 @@ main(){
     # Create MSI - az identity create will create or update. Calling a second time will not change the MSI
     # https://docs.microsoft.com/en-us/cli/azure/identity?view=azure-cli-latest
     MSI_PRINCIPAL_ID=$(az identity create -n $MSI_NAME -g $RESOURCE_GROUP | jq -r ".principalId")
+    MSI_OBJECT_ID=$(az ad sp show --id $MSI_PRINCIPAL_ID --query objectId --out tsv)
 
     _information "Created Managed Identity $MSI_NAME"
     _debug "MSI Name: $MSI_NAME"
     _debug "MSI Principal Id: $MSI_PRINCIPAL_ID"
+    _debug "MSI Object Id: $MSI_OBJECT_ID"
+
     _debug_line_break
 
     # Configure MSI Permissions  
@@ -62,12 +66,12 @@ main(){
 
         _information "Setting Secret Get Permission for $MSI_PRINCIPAL_ID on Keyvault: $keyVault"
         #https://docs.microsoft.com/en-us/azure/key-vault/general/assign-access-policy-cli
-        az keyvault set-policy --name "$keyVault" --object-id "$MSI_PRINCIPAL_ID" --secret-permissions "get" -o none 1>&2
+        az keyvault set-policy --name "$keyVault" --object-id "$MSI_OBJECT_ID" --secret-permissions "get"
 
         _information "Assigning Blob Data Contributor role to $MSI_PRINCIPAL_ID on Storage Account $blobStorage"
         #https://docs.microsoft.com/en-us/cli/azure/role/assignment?view=azure-cli-latest
         #https://docs.microsoft.com/en-us/azure/storage/common/storage-auth-aad-rbac-cli#resource-group-scope 
-        az role assignment create --role "Storage Blob Data Contributor" --assignee-object-id  "$MSI_PRINCIPAL_ID" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$resourceGroup/providers/Microsoft.Storage/storageAccounts/$blobStorage" -o none 1>&2
+        az role assignment create --role "Storage Blob Data Contributor" --assignee-object-id  "$MSI_OBJECT_ID" --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$resourceGroup/providers/Microsoft.Storage/storageAccounts/$blobStorage" -o none 1>&2
     done
     
     _line_break

@@ -1,0 +1,60 @@
+levels:
+  - level: level0
+    stacks:
+    - stack: launchpad
+      repo: base
+      landingZonePath: /tf/caf/public/landingzones/caf_launchpad
+      landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level0/launchpad
+    launchpad: true
+  - level: level1
+    stacks:
+    - stack: foundations
+      repo: base
+      landingZonePath: /tf/caf/public/landingzones/caf_foundations/
+      landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level1
+  - level: level2
+    stacks:
+    - stack: shared_services
+      repo: base
+      landingZonePath: /tf/caf/public/landingzones/caf_shared_services/
+      landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level2/shared_services
+      tfState: caf_shared_services.tfstate
+    - stack: networking_hub
+      repo: base
+      landingZonePath: /tf/caf/public/landingzones/caf_networking/
+      landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level2/networking/hub
+      tfState: networking_hub.tfstate
+  - level: level3
+    stacks:
+    - stack: catalog_service
+      repo: catalog
+      landingZonePath: /tf/caf/public/landingzones/caf_solutions/catalog
+      landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level3/catalog
+      tfState: catalog_service.tfstate
+    - stack: search_service
+      repo: search
+      landingZonePath: /tf/caf/public/landingzones/caf_solutions/search
+      landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level3/search
+      tfState: search_service.tfstate
+    - stack: frontdoor_service
+      repo: frontdoor
+      landingZonePath: /tf/caf/public/landingzones/caf_solutions/frontdoor
+      landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level3/frontdoor
+      tfState: frontdoor_service.tfstate
+  - level: level4
+    stacks:
+    - stack: catalog_service_application
+      repo: catalog
+      landingZonePath: /tf/caf/public/landingzones/caf_solutions/catalog_app_addon
+      landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level3/catalog_app_addon
+      tfState: catalog_service_application.tfstate
+    - stack: search_service
+      repo: search_application
+      landingZonePath: /tf/caf/public/landingzones/caf_solutions/search_app_addon
+      landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level4/search_app_addon
+      tfState: search_application.tfstate
+    - stack: frontdoor_service_application
+      repo: frontdoor
+      landingZonePath: /tf/caf/public/landingzones/caf_solutions/frontdoor_app_addon
+      landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level4/frontdoor_app_addon
+      tfState: frontdoor_service_application.tfstate
