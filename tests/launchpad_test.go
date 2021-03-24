@@ -20,6 +20,19 @@ func TestLaunchpadResourceGroupIsExists(t *testing.T) {
 
 	assert.True(t, exists, "Resource group does not exist")
 }
+
+func TestLaunchpadResourceGroupIsExistsViaClient(t *testing.T) {
+	t.Parallel()
+
+	resourceGroupName := os.Getenv("RESOURCE_GROUP_NAME")
+	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+
+	client, _ := azure.GetResourceGroupClientE(subscriptionId)
+
+	_, err := client.CheckExistence(context.Background(), resourceGroupName)
+
+	assert.NoError(t, err, "Resource group does not exist")
+}
 	t.Parallel()
 
 	fmt.Println(os.Getenv("TEST"))
