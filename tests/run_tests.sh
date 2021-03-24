@@ -20,10 +20,12 @@ shArgs.parse $@
 
 main() {
   export_arm_subscription_id
+
   check_inputs
-  
+
   if [ $CREATE_ENV == true ]; then
     _information "Running rover to deploy infrastructure for environment ${ENVIRONMENT}..."
+
     deploy_environment
   else
     _information "Proceeding with existing environment ${ENVIRONMENT}"
@@ -32,7 +34,6 @@ main() {
   find_and_export_prefix
 
   export ENVIRONMENT=${ENVIRONMENT}
-  export RESOURCE_GROUP_NAME="${PREFIX}-rg-launchpad-level0"
 
   go test -v ./...
 }
