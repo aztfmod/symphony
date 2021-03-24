@@ -33,6 +33,26 @@ func TestLaunchpadResourceGroupIsExistsViaClient(t *testing.T) {
 
 	assert.NoError(t, err, "Resource group does not exist")
 }
+
+func TestLaunchpadResourceGroupHasTags(t *testing.T) {
+	t.Parallel()
+
+	environment := os.Getenv("ENVIRONMENT")
+	resourceGroupName := os.Getenv("RESOURCE_GROUP_NAME")
+	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+
+	client, errClient := azure.GetResourceGroupClientE(subscriptionId)
+
+	assert.NoError(t, errClient, "ResourceGroup Client couldn't read")
+
+	rg, errRG := client.Get(context.Background(), resourceGroupName)
+
+	assert.NoError(t, errRG, "ResourceGroup couldn't read")
+
+	assert.Equal(t, environment, *rg.Tags["environment"], "Environment Tag is not correct")
+	assert.Equal(t, "launchpad", *rg.Tags["landingzone"], "LandingZone Tag is not correct")
+	assert.Equal(t, "level0", *rg.Tags["level"], "Level Tag is not correct")
+}
 	t.Parallel()
 
 	fmt.Println(os.Getenv("TEST"))
