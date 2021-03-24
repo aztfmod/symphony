@@ -97,4 +97,20 @@ func TestLaunchpadKeyVaultHasTenantIdSecret(t *testing.T) {
 
 	assert.True(t, exists, "Tenant Id Secret does not exists")
 }
+
+func TestLaunchpadKeyVaultHasTags(t *testing.T) {
+	t.Parallel()
+
+	environment := os.Getenv("ENVIRONMENT")
+	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+	resourceGroupName := os.Getenv("RESOURCE_GROUP_NAME")
+	keyVaultName := fmt.Sprintf("%s-kv-level0", os.Getenv("PREFIX"))
+
+	kv := azure.GetKeyVault(t, resourceGroupName, keyVaultName, subscriptionId)
+
+	assert.Equal(t, environment, *kv.Tags["environment"], "Environment Tag is not correct")
+	assert.Equal(t, "launchpad", *kv.Tags["landingzone"], "LandingZone Tag is not correct")
+	assert.Equal(t, "level0", *kv.Tags["level"], "Level Tag is not correct")
+	assert.Equal(t, "level0", *kv.Tags["tfstate"], "TF State is not correct")
+}
 }
