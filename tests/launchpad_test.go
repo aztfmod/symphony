@@ -24,6 +24,7 @@ type TestStructure struct {
 	LandingZones   []LandingZone
 }
 
+// Data-Driven Testing approach implemented
 // https://en.wikipedia.org/wiki/Data-driven_testing
 func prepareTestTable() TestStructure {
 	prefix := os.Getenv("PREFIX")
