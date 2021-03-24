@@ -1,41 +1,74 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-LANDING_ZONES_FOLDER="./caf-terraform-landingzones"
+source ../scripts/lib/shell_logger.sh
+source ../scripts/lib/sh_arg.sh
+
+declare LANDING_ZONES_FOLDER=""
+declare CONFIG_FOLDER=""
+declare ENVIRONMENT=""
+
+shArgs.arg "LANDING_ZONES_FOLDER" -z --zones PARAMETER true
+shArgs.arg "CONFIG_FOLDER" -c --config PARAMETER true
+shArgs.arg "ENVIRONMENT" -e --environment PARAMETER true
+
+shArgs.parse $@
+
+check_inputs() {
+  _debug_line_break
+  _debug " Landing Zones Folder : $LANDING_ZONES_FOLDER"
+  _debug "        Config Folder : $CONFIG_FOLDER"
+  _debug "          Environment : $ENVIRONMENT"
+  _debug "                Debug : $DEBUG_FLAG"
+  _debug_line_break
+
+  if [ -z "${LANDING_ZONES_FOLDER}" ]; then
+    _error "Landing Zones Folder is required!"
+    usage
+  fi
+  if [ -z "${CONFIG_FOLDER}" ]; then
+    _error "Config Folder is required!"
+    usage
+  fi
+  if [ -z "${ENVIRONMENT}" ]; then
+    _error "Environment is required!"
+    usage
+  fi
+}
+
+check_inputs
 
 if test -d "$LANDING_ZONES_FOLDER"
 then
-  echo "Landing Zones found..."
+  _information "Landing Zones found..."
 else
-  echo "Landing Zones couldn't found, Starter Landing Zones are downloading..."
+  _error "Landing Zones couldn't found, exiting..."
 
-  git clone https://github.com/Azure/caf-terraform-landingzones.git
+  exit 1
 fi
-
-CONFIG_FOLDER="./caf-terraform-landingzones-starter"
 
 if test -d "$CONFIG_FOLDER"
 then
-  echo "Landing Zones Configurations found..."
+  _information "Landing Zones Configurations found..."
 else
-  echo "Landing Zones Configurations couldn't found, Starter Landing Zones Configurations are downloading..."
+  _error "Landing Zones Configurations couldn't found, exiting..."
 
-  git clone https://github.com/Azure/caf-terraform-landingzones-starter.git
+  exit 1
 fi
 
-echo "Running rover to deploy infrastructure..."
+_information "Running rover to deploy infrastructure..."
 
-environment="demo"
-
-/tf/rover/rover.sh -lz ./caf-terraform-landingzones/landingzones/caf_launchpad \
+/tf/rover/rover.sh -lz "${LANDING_ZONES_FOLDER}/landingzones/caf_launchpad" \
   -launchpad \
-  -var-folder ./configuration/${environment}/level0/launchpad \
+  -var-folder "${CONFIG_FOLDER}/${ENVIRONMENT}/level0/launchpad" \
   -parallelism 30 \
   -level level0 \
-  -env ${environment} \
+  -env ${ENVIRONMENT} \
   -a apply
 
-echo "${environment} environment infrastructure deployed, running tests..."
+_information "${ENVIRONMENT} environment infrastructure deployed, running tests..."
 
-export TEST="${environment}"
+export ENVIRONMENT=${ENVIRONMENT}
+
+export RESOURCE_GROUP_NAME="${PREFIX}-rg-launchpad-level0"
 
 go test -v ./...
