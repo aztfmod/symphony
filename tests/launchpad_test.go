@@ -131,4 +131,16 @@ func TestLaunchpadStorageAccountHasTags(t *testing.T) {
 	assert.Equal(t, "level0", *storage.Tags["level"], "Level Tag is not correct")
 	assert.Equal(t, "level0", *storage.Tags["tfstate"], "TF State is not correct")
 }
+
+func TestLaunchpadStorageAccountHasContainer(t *testing.T) {
+	t.Parallel()
+
+	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+	resourceGroupName := os.Getenv("RESOURCE_GROUP_NAME")
+	storageAccountName := fmt.Sprintf("%sstlevel0", os.Getenv("PREFIX"))
+	containerName := "tfstate"
+
+	exists := azure.StorageBlobContainerExists(t, containerName, storageAccountName, resourceGroupName, subscriptionId)
+
+	assert.True(t, exists, "TF State Container does not exists")
 }
