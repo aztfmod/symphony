@@ -87,4 +87,14 @@ func TestLaunchpadKeyVaultHasSubscriptionIdSecret(t *testing.T) {
 
 	assert.True(t, exists, "Subscription Id Secret does not exists")
 }
+
+func TestLaunchpadKeyVaultHasTenantIdSecret(t *testing.T) {
+	t.Parallel()
+
+	keyVaultName := fmt.Sprintf("%s-kv-level0", os.Getenv("PREFIX"))
+
+	exists := azure.KeyVaultSecretExists(t, keyVaultName, "tenant-id")
+
+	assert.True(t, exists, "Tenant Id Secret does not exists")
+}
 }
