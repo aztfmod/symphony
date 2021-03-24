@@ -10,104 +10,120 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type LandingZone struct {
+	Level              int
+	ResourceGroupName  string
+	KeyVaultName       string
+	StorageAccountName string
+}
+
+type TestStructure struct {
+	Environment    string
+	Prefix         string
+	SubscriptionID string
+	LandingZones   []LandingZone
+}
+
+// https://en.wikipedia.org/wiki/Data-driven_testing
+func prepareTestTable() TestStructure {
+	prefix := os.Getenv("PREFIX")
+
+	test := TestStructure{
+		Prefix:         prefix,
+		SubscriptionID: os.Getenv("ARM_SUBSCRIPTION_ID"),
+		Environment:    os.Getenv("ENVIRONMENT"),
+		LandingZones:   make([]LandingZone, 0),
+	}
+
+	for iLoop := 0; iLoop < 4; iLoop++ {
+		test.LandingZones = append(test.LandingZones, LandingZone{
+			Level:              iLoop,
+			ResourceGroupName:  fmt.Sprintf("%s-rg-launchpad-level%d", prefix, iLoop),
+			KeyVaultName:       fmt.Sprintf("%s-kv-level%d", prefix, iLoop),
+			StorageAccountName: fmt.Sprintf("%sstlevel%d", prefix, iLoop),
+		})
+	}
+
+	return test
+}
+
 func TestLaunchpadResourceGroupIsExists(t *testing.T) {
 	t.Parallel()
 
-	prefix := os.Getenv("PREFIX")
-	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+	test := prepareTestTable()
 
-	for iLoop := 0; iLoop < 4; iLoop++ {
-		resourceGroupName := fmt.Sprintf("%s-rg-launchpad-level%d", prefix, iLoop)
+	for _, landingZone := range test.LandingZones {
+		exists := azure.ResourceGroupExists(t, landingZone.ResourceGroupName, test.SubscriptionID)
 
-		exists := azure.ResourceGroupExists(t, resourceGroupName, subscriptionId)
-
-		assert.True(t, exists, fmt.Sprintf("Resource group (%s) does not exist", resourceGroupName))
+		assert.True(t, exists, fmt.Sprintf("Resource group (%s) does not exist", landingZone.ResourceGroupName))
 	}
 }
 
 func TestLaunchpadResourceGroupIsExistsViaClient(t *testing.T) {
 	t.Parallel()
 
-	prefix := os.Getenv("PREFIX")
-	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+	test := prepareTestTable()
 
-	client, _ := azure.GetResourceGroupClientE(subscriptionId)
+	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
 
-	for iLoop := 0; iLoop < 4; iLoop++ {
-		resourceGroupName := fmt.Sprintf("%s-rg-launchpad-level%d", prefix, iLoop)
+	for _, landingZone := range test.LandingZones {
+		_, err := client.CheckExistence(context.Background(), landingZone.ResourceGroupName)
 
-		_, err := client.CheckExistence(context.Background(), resourceGroupName)
-
-		assert.NoError(t, err, fmt.Sprintf("Resource group (%s) does not exist", resourceGroupName))
+		assert.NoError(t, err, fmt.Sprintf("Resource group (%s) does not exist", landingZone.ResourceGroupName))
 	}
 }
 
 func TestLaunchpadResourceGroupHasTags(t *testing.T) {
 	t.Parallel()
 
-	environment := os.Getenv("ENVIRONMENT")
-	prefix := os.Getenv("PREFIX")
-	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+	test := prepareTestTable()
 
-	client, errClient := azure.GetResourceGroupClientE(subscriptionId)
+	client, errClient := azure.GetResourceGroupClientE(test.SubscriptionID)
 
 	assert.NoError(t, errClient, "ResourceGroup Client couldn't read")
 
-	for iLoop := 0; iLoop < 4; iLoop++ {
-		resourceGroupName := fmt.Sprintf("%s-rg-launchpad-level%d", prefix, iLoop)
+	for _, landingZone := range test.LandingZones {
+		rg, errRG := client.Get(context.Background(), landingZone.ResourceGroupName)
 
-		rg, errRG := client.Get(context.Background(), resourceGroupName)
+		assert.NoError(t, errRG, fmt.Sprintf("ResourceGroup (%s) couldn't read", landingZone.ResourceGroupName))
 
-		assert.NoError(t, errRG, fmt.Sprintf("ResourceGroup (%s) couldn't read", resourceGroupName))
-
-		assert.Equal(t, environment, *rg.Tags["environment"], "Environment Tag is not correct")
+		assert.Equal(t, test.Environment, *rg.Tags["environment"], "Environment Tag is not correct")
 		assert.Equal(t, "launchpad", *rg.Tags["landingzone"], "LandingZone Tag is not correct")
-		assert.Equal(t, fmt.Sprintf("level%d", iLoop), *rg.Tags["level"], "Level Tag is not correct")
+		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *rg.Tags["level"], "Level Tag is not correct")
 	}
 }
 
 func TestLaunchpadResourceGroupHasKeyVault(t *testing.T) {
 	t.Parallel()
 
-	prefix := os.Getenv("PREFIX")
-	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+	test := prepareTestTable()
 
-	for iLoop := 0; iLoop < 4; iLoop++ {
-		resourceGroupName := fmt.Sprintf("%s-rg-launchpad-level%d", prefix, iLoop)
+	for _, landingZone := range test.LandingZones {
+		kv := azure.GetKeyVault(t, landingZone.ResourceGroupName, landingZone.KeyVaultName, test.SubscriptionID)
 
-		keyVaultName := fmt.Sprintf("%s-kv-level%d", prefix, iLoop)
-
-		kv := azure.GetKeyVault(t, resourceGroupName, keyVaultName, subscriptionId)
-
-		assert.NotNil(t, kv, fmt.Sprintf("KeyVault (%s) does not exists", keyVaultName))
+		assert.NotNil(t, kv, fmt.Sprintf("KeyVault (%s) does not exists", landingZone.KeyVaultName))
 	}
 }
 
 func TestLaunchpadResourceGroupHasStorageAccount(t *testing.T) {
 	t.Parallel()
 
-	prefix := os.Getenv("PREFIX")
-	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+	test := prepareTestTable()
 
-	for iLoop := 0; iLoop < 4; iLoop++ {
-		resourceGroupName := fmt.Sprintf("%s-rg-launchpad-level%d", prefix, iLoop)
-		storageAccountName := fmt.Sprintf("%sstlevel%d", prefix, iLoop)
+	for _, landingZone := range test.LandingZones {
+		exists := azure.StorageAccountExists(t, landingZone.StorageAccountName, landingZone.ResourceGroupName, test.SubscriptionID)
 
-		exists := azure.StorageAccountExists(t, storageAccountName, resourceGroupName, subscriptionId)
-
-		assert.True(t, exists, fmt.Sprintf("Storage Account (%s) does not exists", storageAccountName))
+		assert.True(t, exists, fmt.Sprintf("Storage Account (%s) does not exists", landingZone.StorageAccountName))
 	}
 }
 
 func TestLaunchpadKeyVaultHasSubscriptionIdSecret(t *testing.T) {
 	t.Parallel()
 
-	prefix := os.Getenv("PREFIX")
+	test := prepareTestTable()
 
-	for iLoop := 0; iLoop < 4; iLoop++ {
-		keyVaultName := fmt.Sprintf("%s-kv-level%d", prefix, iLoop)
-
-		exists := azure.KeyVaultSecretExists(t, keyVaultName, "subscription-id")
+	for _, landingZone := range test.LandingZones {
+		exists := azure.KeyVaultSecretExists(t, landingZone.KeyVaultName, "subscription-id")
 
 		assert.True(t, exists, "Subscription Id Secret does not exists")
 	}
@@ -116,12 +132,10 @@ func TestLaunchpadKeyVaultHasSubscriptionIdSecret(t *testing.T) {
 func TestLaunchpadKeyVaultHasTenantIdSecret(t *testing.T) {
 	t.Parallel()
 
-	prefix := os.Getenv("PREFIX")
+	test := prepareTestTable()
 
-	for iLoop := 0; iLoop < 4; iLoop++ {
-		keyVaultName := fmt.Sprintf("%s-kv-level%d", prefix, iLoop)
-
-		exists := azure.KeyVaultSecretExists(t, keyVaultName, "tenant-id")
+	for _, landingZone := range test.LandingZones {
+		exists := azure.KeyVaultSecretExists(t, landingZone.KeyVaultName, "tenant-id")
 
 		assert.True(t, exists, "Tenant Id Secret does not exists")
 	}
@@ -130,59 +144,44 @@ func TestLaunchpadKeyVaultHasTenantIdSecret(t *testing.T) {
 func TestLaunchpadKeyVaultHasTags(t *testing.T) {
 	t.Parallel()
 
-	environment := os.Getenv("ENVIRONMENT")
-	prefix := os.Getenv("PREFIX")
-	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+	test := prepareTestTable()
 
-	for iLoop := 0; iLoop < 4; iLoop++ {
-		resourceGroupName := fmt.Sprintf("%s-rg-launchpad-level%d", prefix, iLoop)
+	for _, landingZone := range test.LandingZones {
+		kv := azure.GetKeyVault(t, landingZone.ResourceGroupName, landingZone.KeyVaultName, test.SubscriptionID)
 
-		keyVaultName := fmt.Sprintf("%s-kv-level%d", prefix, iLoop)
-
-		kv := azure.GetKeyVault(t, resourceGroupName, keyVaultName, subscriptionId)
-
-		assert.Equal(t, environment, *kv.Tags["environment"], "Environment Tag is not correct")
+		assert.Equal(t, test.Environment, *kv.Tags["environment"], "Environment Tag is not correct")
 		assert.Equal(t, "launchpad", *kv.Tags["landingzone"], "LandingZone Tag is not correct")
-		assert.Equal(t, fmt.Sprintf("level%d", iLoop), *kv.Tags["level"], "Level Tag is not correct")
-		assert.Equal(t, fmt.Sprintf("level%d", iLoop), *kv.Tags["tfstate"], "TF State is not correct")
+		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *kv.Tags["level"], "Level Tag is not correct")
+		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *kv.Tags["tfstate"], "TF State Tag is not correct")
 	}
 }
 
 func TestLaunchpadStorageAccountHasTags(t *testing.T) {
 	t.Parallel()
 
-	environment := os.Getenv("ENVIRONMENT")
-	prefix := os.Getenv("PREFIX")
-	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+	test := prepareTestTable()
 
-	for iLoop := 0; iLoop < 4; iLoop++ {
-		resourceGroupName := fmt.Sprintf("%s-rg-launchpad-level%d", prefix, iLoop)
-
-		storageAccountName := fmt.Sprintf("%sstlevel%d", prefix, iLoop)
-
-		storage, err := azure.GetStorageAccountE(storageAccountName, resourceGroupName, subscriptionId)
+	for _, landingZone := range test.LandingZones {
+		storage, err := azure.GetStorageAccountE(landingZone.StorageAccountName, landingZone.ResourceGroupName, test.SubscriptionID)
 
 		assert.NoError(t, err, "Storage Account couldn't read")
 
-		assert.Equal(t, environment, *storage.Tags["environment"], "Environment Tag is not correct")
+		assert.Equal(t, test.Environment, *storage.Tags["environment"], "Environment Tag is not correct")
 		assert.Equal(t, "launchpad", *storage.Tags["landingzone"], "LandingZone Tag is not correct")
-		assert.Equal(t, fmt.Sprintf("level%d", iLoop), *storage.Tags["level"], "Level Tag is not correct")
-		assert.Equal(t, fmt.Sprintf("level%d", iLoop), *storage.Tags["tfstate"], "TF State is not correct")
+		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *storage.Tags["level"], "Level Tag is not correct")
+		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *storage.Tags["tfstate"], "TF State Tag is not correct")
 	}
 }
 
 func TestLaunchpadStorageAccountHasTFStateContainer(t *testing.T) {
 	t.Parallel()
 
-	prefix := os.Getenv("PREFIX")
-	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+	test := prepareTestTable()
 
-	for iLoop := 0; iLoop < 4; iLoop++ {
-		resourceGroupName := fmt.Sprintf("%s-rg-launchpad-level%d", prefix, iLoop)
-		storageAccountName := fmt.Sprintf("%sstlevel%d", prefix, iLoop)
+	for _, landingZone := range test.LandingZones {
 		containerName := "tfstate"
 
-		exists := azure.StorageBlobContainerExists(t, containerName, storageAccountName, resourceGroupName, subscriptionId)
+		exists := azure.StorageBlobContainerExists(t, containerName, landingZone.StorageAccountName, landingZone.ResourceGroupName, test.SubscriptionID)
 
 		assert.True(t, exists, "TF State Container does not exists")
 	}
