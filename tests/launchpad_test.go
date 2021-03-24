@@ -66,5 +66,15 @@ func TestLaunchpadResourceGroupHasKeyVault(t *testing.T) {
 	assert.NotNil(t, kv, "KeyVault does not exists")
 }
 
-	assert.True(t, true, false)
+func TestLaunchpadResourceGroupHasStorageAccount(t *testing.T) {
+	t.Parallel()
+
+	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+	resourceGroupName := os.Getenv("RESOURCE_GROUP_NAME")
+	storageAccountName := fmt.Sprintf("%sstlevel0", os.Getenv("PREFIX"))
+
+	exists := azure.StorageAccountExists(t, storageAccountName, resourceGroupName, subscriptionId)
+
+	assert.True(t, exists, "Storage Account does not exists")
+}
 }
