@@ -53,9 +53,18 @@ func TestLaunchpadResourceGroupHasTags(t *testing.T) {
 	assert.Equal(t, "launchpad", *rg.Tags["landingzone"], "LandingZone Tag is not correct")
 	assert.Equal(t, "level0", *rg.Tags["level"], "Level Tag is not correct")
 }
+
+func TestLaunchpadResourceGroupHasKeyVault(t *testing.T) {
 	t.Parallel()
 
-	fmt.Println(os.Getenv("TEST"))
+	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
+	resourceGroupName := os.Getenv("RESOURCE_GROUP_NAME")
+	keyVaultName := fmt.Sprintf("%s-kv-level0", os.Getenv("PREFIX"))
+
+	kv := azure.GetKeyVault(t, resourceGroupName, keyVaultName, subscriptionId)
+
+	assert.NotNil(t, kv, "KeyVault does not exists")
+}
 
 	assert.True(t, true, false)
 }
