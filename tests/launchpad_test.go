@@ -132,7 +132,7 @@ func TestLaunchpadStorageAccountHasTags(t *testing.T) {
 	assert.Equal(t, "level0", *storage.Tags["tfstate"], "TF State is not correct")
 }
 
-func TestLaunchpadStorageAccountHasContainer(t *testing.T) {
+func TestLaunchpadStorageAccountHasTFStateContainer(t *testing.T) {
 	t.Parallel()
 
 	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
