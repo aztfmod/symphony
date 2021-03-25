@@ -21,6 +21,9 @@ shArgs.parse $@
 
 main() {
   verify_tool_exists "az"
+
+  check_az_is_logged_in
+
   export_arm_subscription_id
 
   check_inputs
