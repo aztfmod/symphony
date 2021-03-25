@@ -20,6 +20,7 @@ shArgs.arg "DEBUG_FLAG" -d --debug FLAG true
 shArgs.parse $@
 
 main() {
+  verify_tool_exists "az"
   export_arm_subscription_id
 
   check_inputs
