@@ -184,6 +184,6 @@ func TestLaunchpadStorageAccountHasTFStateContainer(t *testing.T) {
 
 		exists := azure.StorageBlobContainerExists(t, containerName, landingZone.StorageAccountName, landingZone.ResourceGroupName, test.SubscriptionID)
 
-		assert.True(t, exists, "TF State Container does not exists")
+		assert.True(t, exists, "TF State Container does not exist")
 	}
 }
