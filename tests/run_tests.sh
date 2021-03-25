@@ -2,6 +2,7 @@
 
 source ../scripts/lib/shell_logger.sh
 source ../scripts/lib/sh_arg.sh
+source ../scripts/lib/utils.sh
 source ./utils.sh
 
 declare LANDING_ZONES_FOLDER=""
