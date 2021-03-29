@@ -39,6 +39,7 @@ main() {
   find_and_export_prefix
 
   export ENVIRONMENT=${ENVIRONMENT}
+  export LOCATION=$(cat config.json | jq -r ".location")
 
   go test -v ./...
 }
