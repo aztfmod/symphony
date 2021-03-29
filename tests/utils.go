@@ -3,7 +3,6 @@ package caf_tests
 import (
 	"fmt"
 	"os"
-	"strings"
 )
 
 type LandingZone struct {
@@ -14,11 +13,11 @@ type LandingZone struct {
 }
 
 type TestStructure struct {
-	Environment                      string
-	Prefix                           string
-	SubscriptionID                   string
-	Location                         string
-	LandingZones                     []LandingZone
+	Environment    string
+	Prefix         string
+	SubscriptionID string
+	Location       string
+	LandingZones   []LandingZone
 }
 
 // Data-Driven Testing approach implemented
@@ -27,11 +26,11 @@ func prepareTestTable() TestStructure {
 	prefix := os.Getenv("PREFIX")
 
 	test := TestStructure{
-		Prefix:                           prefix,
-		SubscriptionID:                   os.Getenv("ARM_SUBSCRIPTION_ID"),
-		Environment:                      os.Getenv("ENVIRONMENT"),
-		Location:                         os.Getenv("LOCATION"),
-		LandingZones:                     make([]LandingZone, 0),
+		Prefix:         prefix,
+		SubscriptionID: os.Getenv("ARM_SUBSCRIPTION_ID"),
+		Environment:    os.Getenv("ENVIRONMENT"),
+		Location:       os.Getenv("LOCATION"),
+		LandingZones:   make([]LandingZone, 0),
 	}
 
 	for iLoop := 0; iLoop < 4; iLoop++ {
