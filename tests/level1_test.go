@@ -15,9 +15,7 @@ func TestFoundationResourceGroupsDoesNotExist(t *testing.T) {
 
 	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
 
-	var top int32 = 100
-
-	result, _ := client.List(context.Background(), "tagName eq 'level' and tagValue eq 'level1'", &top)
+	result, _ := client.List(context.Background(), "tagName eq 'level' and tagValue eq 'level1'", nil)
 
 	rgList := result.Values()
 
