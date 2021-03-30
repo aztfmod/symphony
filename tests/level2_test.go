@@ -22,12 +22,12 @@ func TestSharedServicesResourceGroupsExists(t *testing.T) {
 
 	actual := 0
 	for _, rg := range rgList {
-		if *rg.Tags["environment"] == test.Environment {
+		if *rg.Tags["landingzone"] == "shared_services" && *rg.Tags["environment"] == test.Environment {
 			actual++
 		}
 	}
 
-	expected := 4
+	expected := 1
 
 	assert.Equal(t, expected, actual, fmt.Sprintf("There must be %d resource group with 'level=level2' and 'environment=%s' tags, found %d", expected, test.Environment, actual))
 }
