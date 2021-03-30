@@ -1,0 +1,1 @@
+# CAF folder for symphony
