@@ -70,7 +70,7 @@ func TestSharedServicesHasRecoveryServiceVault(t *testing.T) {
 
 	exist := azure.RecoveryServicesVaultExists(t, fmt.Sprintf("%s-rsv-vaultre1", test.Prefix), *rg.Name, test.SubscriptionID)
 
-	assert.True(t, exist, "Resource Group count does not match")
+	assert.True(t, exist, fmt.Sprintf("Expected Recovery Service Vault does not exists with '%s-rsv-vaultre1' name, under the resource group with 'landingzone=shared_services' tag", test.Prefix))
 }
 
 func TestSharedServicesHasTwoResourceGroupForNetworkingHub(t *testing.T) {
