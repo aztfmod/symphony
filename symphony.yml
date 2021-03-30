@@ -1,5 +1,6 @@
 levels:
   - level: level0
+    msiId: <insert client id guid here>
     stacks:
     - stack: launchpad
       repo: base
@@ -7,12 +8,14 @@ levels:
       landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level0/launchpad
     launchpad: true
   - level: level1
+    msiId: <insert client id guid here>
     stacks:
     - stack: foundations
       repo: base
       landingZonePath: /tf/caf/public/landingzones/caf_foundations/
       landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level1
   - level: level2
+    msiId: <insert client id guid here>
     stacks:
     - stack: shared_services
       repo: base
@@ -25,6 +28,7 @@ levels:
       landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level2/networking/hub
       tfState: networking_hub.tfstate
   - level: level3
+    msiId: <insert client id guid here>  
     stacks:
     - stack: catalog_service
       repo: catalog
@@ -42,6 +46,7 @@ levels:
       landingZoneConfigurationPath: /tf/caf/configuration/${environment}/level3/frontdoor
       tfState: frontdoor_service.tfstate
   - level: level4
+    msiId: <insert client id guid here>  
     stacks:
     - stack: catalog_service_application
       repo: catalog
