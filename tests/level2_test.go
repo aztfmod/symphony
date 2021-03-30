@@ -29,7 +29,7 @@ func TestSharedServicesResourceGroupsExists(t *testing.T) {
 
 	expected := 4
 
-	assert.Equal(t, expected, len(rgList), "Resource Group count does not match")
+	assert.Equal(t, expected, actual, fmt.Sprintf("There must be %d resource group with 'level=level2' and 'environment=%s' tags, found %d", expected, test.Environment, actual))
 }
 
 func TestSharedServicesHasOneResourceGroupForSharedServices(t *testing.T) {
