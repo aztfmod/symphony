@@ -1,3 +1,0 @@
-
-variable key {}
-variable keyvault {}
