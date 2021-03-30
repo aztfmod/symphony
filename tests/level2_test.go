@@ -93,5 +93,5 @@ func TestSharedServicesHasTwoResourceGroupForNetworkingHub(t *testing.T) {
 
 	expected := 2
 
-	assert.Equal(t, expected, len(rgList), "Resource Group count does not match")
+	assert.Equal(t, expected, actual, fmt.Sprintf("There must be %d resource group with 'landingzone=networking_hub' and 'environment=%s' tags, found %d", expected, test.Environment, actual))
 }
