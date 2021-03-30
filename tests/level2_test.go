@@ -52,7 +52,7 @@ func TestSharedServicesHasOneResourceGroupForSharedServices(t *testing.T) {
 
 	expected := 1
 
-	assert.Equal(t, expected, len(rgList), "Resource Group count does not match")
+	assert.Equal(t, expected, actual, fmt.Sprintf("There must be only one resource group with 'landingzone=shared_services' and 'environment=%s' tags", test.Environment))
 }
 
 func TestSharedServicesHasRecoveryServiceVault(t *testing.T) {
