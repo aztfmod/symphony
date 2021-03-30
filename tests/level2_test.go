@@ -43,6 +43,13 @@ func TestSharedServicesHasOneResourceGroupForSharedServices(t *testing.T) {
 
 	rgList := result.Values()
 
+	actual := 0
+	for _, rg := range rgList {
+		if *rg.Tags["environment"] == test.Environment {
+			actual++
+		}
+	}
+
 	expected := 1
 
 	assert.Equal(t, expected, len(rgList), "Resource Group count does not match")
