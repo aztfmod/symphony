@@ -15,13 +15,18 @@ func TestFoundationResourceGroupsDoesNotExist(t *testing.T) {
 
 	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
 
-	var top int32 = 100
-
-	result, _ := client.List(context.Background(), "tagName eq 'level' and tagValue eq 'level1'", &top)
+	result, _ := client.List(context.Background(), "tagName eq 'level' and tagValue eq 'level1'", nil)
 
 	rgList := result.Values()
 
+	actual := 0
+	for _, rg := range rgList {
+		if *rg.Tags["environment"] == test.Environment {
+			actual++
+		}
+	}
+
 	expected := 1
 
-	assert.Equal(t, expected, len(rgList), "Resource Group count does not match")
+	assert.Equal(t, expected, actual, "Resource Group count does not match")
 }
