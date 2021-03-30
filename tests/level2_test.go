@@ -80,13 +80,13 @@ func TestSharedServicesHasTwoResourceGroupForNetworkingHub(t *testing.T) {
 
 	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
 
-	result, _ := client.List(context.Background(), "tagName eq 'landingzone' and tagValue eq 'networking_hub'", nil)
+	result, _ := client.List(context.Background(), "tagName eq 'level' and tagValue eq 'level2'", nil)
 
 	rgList := result.Values()
 
 	actual := 0
 	for _, rg := range rgList {
-		if *rg.Tags["environment"] == test.Environment {
+		if *rg.Tags["landingzone"] == "networking_hub" && *rg.Tags["environment"] == test.Environment {
 			actual++
 		}
 	}
