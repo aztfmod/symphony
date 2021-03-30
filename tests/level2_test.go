@@ -16,9 +16,7 @@ func TestSharedServicesResourceGroupsExists(t *testing.T) {
 
 	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
 
-	var top int32 = 100
-
-	result, _ := client.List(context.Background(), "tagName eq 'level' and tagValue eq 'level2'", &top)
+	result, _ := client.List(context.Background(), "tagName eq 'level' and tagValue eq 'level2'", nil)
 
 	rgList := result.Values()
 
@@ -34,9 +32,7 @@ func TestSharedServicesHasOneResourceGroupForSharedServices(t *testing.T) {
 
 	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
 
-	var top int32 = 100
-
-	result, _ := client.List(context.Background(), "tagName eq 'landingzone' and tagValue eq 'shared_services'", &top)
+	result, _ := client.List(context.Background(), "tagName eq 'landingzone' and tagValue eq 'shared_services'", nil)
 
 	rgList := result.Values()
 
@@ -52,9 +48,7 @@ func TestSharedServicesHasRecoveryServiceVault(t *testing.T) {
 
 	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
 
-	var top int32 = 100
-
-	result, _ := client.List(context.Background(), "tagName eq 'landingzone' and tagValue eq 'shared_services'", &top)
+	result, _ := client.List(context.Background(), "tagName eq 'landingzone' and tagValue eq 'shared_services'", nil)
 
 	rgList := result.Values()
 
@@ -72,9 +66,7 @@ func TestSharedServicesHasTwoResourceGroupForNetworkingHub(t *testing.T) {
 
 	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
 
-	var top int32 = 100
-
-	result, _ := client.List(context.Background(), "tagName eq 'landingzone' and tagValue eq 'networking_hub'", &top)
+	result, _ := client.List(context.Background(), "tagName eq 'landingzone' and tagValue eq 'networking_hub'", nil)
 
 	rgList := result.Values()
 
