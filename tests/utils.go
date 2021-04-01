@@ -29,7 +29,6 @@ func prepareTestTable() TestStructure {
 		Prefix:         prefix,
 		SubscriptionID: os.Getenv("ARM_SUBSCRIPTION_ID"),
 		Environment:    os.Getenv("ENVIRONMENT"),
-		Location:       os.Getenv("LOCATION"),
 		LandingZones:   make([]LandingZone, 0),
 	}
 
