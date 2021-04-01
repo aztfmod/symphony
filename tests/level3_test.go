@@ -174,3 +174,22 @@ func TestPrivateEndpointsInboundSecurityRules(t *testing.T) {
 		assert.ElementsMatch(t, test.Config.PrivateEndpointsInboundRules, actual, fmt.Sprintf("PrivateEndpoints doesn't have expected destination ports: %+q", test.Config.PrivateEndpointsInboundRules))
 	}
 }
+
+func TestPrivateEndpointsOutboundSecurityRules(t *testing.T) {
+	t.Parallel()
+
+	test := prepareTestTable()
+
+	for iLoop := 1; iLoop <= 2; iLoop++ {
+		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-private_endpoints", test.Prefix), test.SubscriptionID)
+		actual := make([]string, 0)
+
+		for _, rule := range rules.SummarizedRules {
+			if rule.Direction == "Outbound" {
+				actual = append(actual, rule.DestinationPortRange)
+			}
+		}
+
+		assert.ElementsMatch(t, test.Config.PrivateEndpointsOutboundRules, actual, fmt.Sprintf("PrivateEndpoints doesn't have expected destination ports: %+q", test.Config.PrivateEndpointsOutboundRules))
+	}
+}
