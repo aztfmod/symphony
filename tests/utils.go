@@ -20,6 +20,16 @@ type TestStructure struct {
 	LandingZones   []LandingZone
 }
 
+type Config struct {
+	Location                      string   `json:"location"`
+	BastionInboundRules           []string `json:"bastionInboundRules"`
+	BastionOutboundRules          []string `json:"bastionOutboundRules"`
+	JumpboxInboundRules           []string `json:"jumpboxInboundRules"`
+	JumpboxOutboundRules          []string `json:"jumpboxOutboundRules"`
+	PrivateEndpointsInboundRules  []string `json:"privateEndpointsInboundRules"`
+	PrivateEndpointsOutboundRules []string `json:"privateEndpointsOutboundRules"`
+}
+
 // Data-Driven Testing approach implemented
 // https://en.wikipedia.org/wiki/Data-driven_testing
 func prepareTestTable() TestStructure {
