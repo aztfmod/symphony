@@ -55,3 +55,15 @@ func TestBastionSubNetSecurityRulesCount(t *testing.T) {
 		assert.Equal(t, 12, len(rules.SummarizedRules), fmt.Sprintf("Bastion Subnet should have 12 rules, found %d", len(rules.SummarizedRules)))
 	}
 }
+
+func TestJumpboxSecurityRulesCount(t *testing.T) {
+	t.Parallel()
+
+	test := prepareTestTable()
+
+	for iLoop := 1; iLoop <= 2; iLoop++ {
+		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-jumpbox", test.Prefix), test.SubscriptionID)
+
+		assert.Equal(t, 7, len(rules.SummarizedRules), fmt.Sprintf("Jumpbox should have 7 rules, found %d", len(rules.SummarizedRules)))
+	}
+}
