@@ -1,3 +1,5 @@
 {
-  "location": "southeastasia"
+  "location": "southeastasia",
+  "bastionInboundRules": ["443", "135", "4443", "*", "*", "*"],
+  "bastionOutboundRules": ["*", "*", "*", "22", "443", "3389"],
 }
