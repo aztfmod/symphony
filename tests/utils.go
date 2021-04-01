@@ -18,6 +18,7 @@ type TestStructure struct {
 	SubscriptionID string
 	Location       string
 	LandingZones   []LandingZone
+	Config         Config
 }
 
 type Config struct {
