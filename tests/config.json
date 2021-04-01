@@ -4,4 +4,6 @@
   "bastionOutboundRules": ["*", "*", "*", "22", "443", "3389"],
   "jumpboxInboundRules": ["22", "*", "*", "*"],
   "jumpboxOutboundRules": ["*", "*", "*"],
+  "privateEndpointsInboundRules": ["*", "*", "*"],
+  "privateEndpointsOutboundRules": ["*", "*", "*"]
 }
