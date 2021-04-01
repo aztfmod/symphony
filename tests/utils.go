@@ -1,7 +1,9 @@
 package caf_tests
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 )
 
@@ -42,6 +44,16 @@ func prepareTestTable() TestStructure {
 		Environment:    os.Getenv("ENVIRONMENT"),
 		LandingZones:   make([]LandingZone, 0),
 	}
+
+	jsonFile, err := os.Open("config.json")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	json.Unmarshal(byteValue, &test.Config)
 
 	for iLoop := 0; iLoop < 4; iLoop++ {
 		test.LandingZones = append(test.LandingZones, LandingZone{
