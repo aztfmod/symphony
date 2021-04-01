@@ -67,3 +67,15 @@ func TestJumpboxSecurityRulesCount(t *testing.T) {
 		assert.Equal(t, 7, len(rules.SummarizedRules), fmt.Sprintf("Jumpbox should have 7 rules, found %d", len(rules.SummarizedRules)))
 	}
 }
+
+func TestPrivateEndpointsSecurityRulesCount(t *testing.T) {
+	t.Parallel()
+
+	test := prepareTestTable()
+
+	for iLoop := 1; iLoop <= 2; iLoop++ {
+		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-private_endpoints", test.Prefix), test.SubscriptionID)
+
+		assert.Equal(t, 6, len(rules.SummarizedRules), fmt.Sprintf("Private Endpoints should have 6 rules, found %d", len(rules.SummarizedRules)))
+	}
+}
