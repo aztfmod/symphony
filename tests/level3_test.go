@@ -74,6 +74,26 @@ func TestBastionSubNetInboundSecurityRules(t *testing.T) {
 		assert.ElementsMatch(t, test.Config.BastionInboundRules, actual, fmt.Sprintf("Bastion Subnet doesn't have expected destination ports: %+q", test.Config.BastionInboundRules))
 	}
 }
+
+func TestBastionSubNetOutboundSecurityRules(t *testing.T) {
+	t.Parallel()
+
+	test := prepareTestTable()
+
+	for iLoop := 1; iLoop <= 2; iLoop++ {
+		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-AzureBastionSubnet", test.Prefix), test.SubscriptionID)
+		actual := make([]string, 0)
+
+		for _, rule := range rules.SummarizedRules {
+			if rule.Direction == "Outbound" {
+				actual = append(actual, rule.DestinationPortRange)
+			}
+		}
+
+		assert.ElementsMatch(t, test.Config.BastionOutboundRules, actual, fmt.Sprintf("Bastion Subnet doesn't have expected destination ports: %+q", test.Config.BastionOutboundRules))
+	}
+}
+
 func TestJumpboxSecurityRulesCount(t *testing.T) {
 	t.Parallel()
 
