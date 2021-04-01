@@ -43,3 +43,15 @@ func TestVirtualNetworksAreInDifferentRegions(t *testing.T) {
 
 	assert.NotEqual(t, *vnet1.Location, *vnet2.Location, "Virtual Networks in the 'landingzone=networking_hub' resource groups should provisioned in different regions")
 }
+
+func TestBastionSubNetSecurityRulesCount(t *testing.T) {
+	t.Parallel()
+
+	test := prepareTestTable()
+
+	for iLoop := 1; iLoop <= 2; iLoop++ {
+		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-AzureBastionSubnet", test.Prefix), test.SubscriptionID)
+
+		assert.Equal(t, 12, len(rules.SummarizedRules), fmt.Sprintf("Bastion Subnet should have 12 rules, found %d", len(rules.SummarizedRules)))
+	}
+}
