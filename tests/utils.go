@@ -1,7 +1,9 @@
 package caf_tests
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 )
 
@@ -18,6 +20,17 @@ type TestStructure struct {
 	SubscriptionID string
 	Location       string
 	LandingZones   []LandingZone
+	Config         Config
+}
+
+type Config struct {
+	Location                      string   `json:"location"`
+	BastionInboundRules           []string `json:"bastionInboundRules"`
+	BastionOutboundRules          []string `json:"bastionOutboundRules"`
+	JumpboxInboundRules           []string `json:"jumpboxInboundRules"`
+	JumpboxOutboundRules          []string `json:"jumpboxOutboundRules"`
+	PrivateEndpointsInboundRules  []string `json:"privateEndpointsInboundRules"`
+	PrivateEndpointsOutboundRules []string `json:"privateEndpointsOutboundRules"`
 }
 
 // Data-Driven Testing approach implemented
@@ -29,9 +42,18 @@ func prepareTestTable() TestStructure {
 		Prefix:         prefix,
 		SubscriptionID: os.Getenv("ARM_SUBSCRIPTION_ID"),
 		Environment:    os.Getenv("ENVIRONMENT"),
-		Location:       os.Getenv("LOCATION"),
 		LandingZones:   make([]LandingZone, 0),
 	}
+
+	jsonFile, err := os.Open("config.json")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	json.Unmarshal(byteValue, &test.Config)
 
 	for iLoop := 0; iLoop < 4; iLoop++ {
 		test.LandingZones = append(test.LandingZones, LandingZone{
