@@ -2,7 +2,18 @@
 
 This document highlights the steps necessary to test this project with a sovereign cloud.
 
-# OPTIONAL: Register new cloud
+If you are using a registered cloud you can do so by using the ```-c``` option for rover which has built-in access to the following:
+
+- AzureCloud
+- AzureChinaCloud
+- AzureUSGovernment
+- AzureGermanCloud
+
+
+Rover is available at: 
+* https://github.com/aztfmod/rover/blob/master/scripts/rover.sh
+
+# OPTIONAL: Register non-public cloud
 
 0. Before running ```az cloud show``` to export the current cloud's details, run it once to view the current cloud details in the Terminal. If necessary, run ```az cloud set``` to set the desired cloud as the active cloud.
     * ```az cloud show -o table```
@@ -13,13 +24,13 @@ This document highlights the steps necessary to test this project with a soverei
 1. Delete the following values from the generated .json file: isActive, name and profile, since these 3 values will be automatically assigned during the ```az cloud register``` process.
 
 1. Run the following command, using the revised .json file:
-    * ```az cloud register -n USSec --cloud-config @"cloud.json"```
+    * ```az cloud register -n AzureStack --cloud-config @"cloud.json"```
 
 1. Log out of current cloud
     * ```az logout```
 
 1. Set newly registered cloud
-    * ```az cloud set -n USSec```
+    * ```az cloud set -n AzureStack```
 
 1. Log in to newly registered cloud
     * ```az login```
