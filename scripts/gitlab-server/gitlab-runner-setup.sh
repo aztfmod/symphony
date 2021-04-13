@@ -18,6 +18,7 @@ declare MODE_FULL=false # true=1 vm 5 runners, 1 msi  false=5 vms 5 runner each 
 declare GITLAB_TOKEN=""
 declare GITLAB_DOMAIN=""
 declare GITLAB_URL=""
+declare CONFIG_PATH=./symphony.yml
 
 # includes
 source ../lib/shell_logger.sh
@@ -33,6 +34,7 @@ shArgs.arg "CERT_PATH" -c --cert-path PARAMETER true
 shArgs.arg "GITLAB_TOKEN" -gt --gitlab-token PARAMETER true
 shArgs.arg "GITLAB_DOMAIN" -gd --gitlab-domain PARAMETER true
 shArgs.arg "SERVER_INTERNAL_IP" -si --server-ip PARAMETER true
+shArgs.arg "CONFIG_PATH" -cp --config-path PARAMETER true
 
 shArgs.parse $@
 
@@ -40,27 +42,30 @@ main(){
     print_banner
     verify_tool_exists "az"
     check_inputs
+
     check_az_is_logged_in
 
     if [ "$MODE_FULL" == true ]; then
         _debug "Running in full mode."
-        for i in {1..5}; do
-            local vmName="$VM_PREFIX-$i"
-            create_single_vm "$vmName"
+        for level in {1..5}; do
+            local vmName="$VM_PREFIX-$level"
+            create_single_vm "$vmName" "$level"
         done
     else
         _debug "Running in basic mode. "
         local vmName="$VM_PREFIX-1"
-        create_single_vm "$vmName"
+        create_single_vm "$vmName" "1"
     fi;
 
     _success "GitLab Runner VM Created!"
 }
 
+
 create_single_vm() {
       local vmName=$1
-      _debug "Creating VM $vmName"
-
+      local level=$2
+      _debug "Creating VM. Name: $vmName - Level: $level"
+      
       local vmCreateResult=$(create_vm "$vmName")
       _debug "VM Create Result: $vmCreateResult"
       
@@ -72,10 +77,14 @@ create_single_vm() {
       wait_for_cloud_init_completion "$publicIp"
       copy_cert_to_vm "$publicIp"
 
-      _debug "Creating MSI $vmName"
-      local msiId=$(create_msi "$vmName")
+      _debug "Loading MSI $vmName"
+      local msiId=$(find_msi_by_level "$vmName" "$level")
       _debug "msiId $msiId"
-      assign_msi "$vmName"
+
+      local msiResourceId=$(get_msi_resource_id "$msiId")
+      _debug "msiResourceId: $msiResourceId"
+
+      assign_msi "$vmName" "$msiResourceId"
 
       add_server_private_ip_to_hosts_file "$publicIp"
       copy_custom_runner_image_to_vm "$publicIp" "$msiId" "$vmName"
@@ -90,15 +99,23 @@ add_server_private_ip_to_hosts_file() {
 
 assign_msi() {
     local vmName=$1
-    az vm identity assign -g $RESOURCE_GROUP -n $vmName --identities $vmName
+    local resourceId=$2
+    az vm identity assign -g $RESOURCE_GROUP -n $vmName --identities $resourceId
 }
 
-create_msi() {
-    local msiName=$1
-    local msiId=$(az identity create -n $msiName -g $RESOURCE_GROUP | jq -r ".id")
+get_msi_resource_id() {
+    local msiId=$1
+    local resourceId=""
+    resourceId=$(az identity list --query "[?clientId=='$msiId'].{id:id}" -o tsv)
+    echo $resourceId
+}
+
+find_msi_by_level () {
+    local level=$1
+    local msiId=""
+    msiId=$(yq -r '.levels[] | select(.level == "level1").msiId' ../../.data/symphony.yml)
     echo $msiId
 }
-
 copy_custom_runner_image_to_vm() {
     local ip=$1
     local msiId=$2
@@ -164,6 +181,7 @@ check_inputs(){
     GITLAB_URL="https://$GITLAB_DOMAIN/"  
     _debug_line_break
     _debug "      Subscription Id : $__SUBSCRIPTION_ID__"
+    _debug "           Config Path: $CONFIG_PATH"
     _debug "         Gitlab Token : $GITLAB_TOKEN"
     _debug "           Gitlab Url : $GITLAB_URL"
     _debug "       Resource Group : $RESOURCE_GROUP"
