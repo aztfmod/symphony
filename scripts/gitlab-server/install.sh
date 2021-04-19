@@ -4,21 +4,22 @@
 #./gitlab-server-setup.sh
 
 # values needed from server vm
-declare RESOURCE_GROUP="server_group"
-declare GITLAB_TOKEN="<token>"
-declare GITLAB_URL="<gitlab server url>"
+declare RESOURCE_GROUP="<server_resource_group>"
+declare GITLAB_TOKEN="<gitlab_server_token>"
+declare GITLAB_URL="<gitlab_server_url>"
 declare CERT_PATH=~/projects/caf/symphony/.data/gitlab.crt
-declare SERVER_INTERNAL_IP="10.0.1.4"
+declare SERVER_INTERNAL_IP="10.0.0.4"
+declare ENVIRONMENT="<caf_env>"
+declare CONFIG_PATH="../../symphony.yml"
 
 # invoke runner script
 ./gitlab-runner-setup.sh \
-    -g $RESOURCE_GROUP \
-    -c $CERT_PATH \
+    -g  $RESOURCE_GROUP \
     -gt $GITLAB_TOKEN \
     -gd $GITLAB_URL \
+    -c  $CERT_PATH \
     -si $SERVER_INTERNAL_IP \
-    -cp ../../symphony.yml \
-    -f \
-    -d \
-
-
+    -e  $ENVIRONMENT \
+    -cp $CONFIG_PATH \
+    -d  \
+    -f
