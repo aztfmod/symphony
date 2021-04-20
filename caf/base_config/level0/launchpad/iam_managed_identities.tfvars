@@ -1,4 +1,12 @@
 managed_identities = {
+  level0 = {
+    # Used by the release agent to deploy resources to level 0
+    name               = "runner-level-0"
+    resource_group_key = "security"
+    tags = {
+      level = "level0"
+    }
+  }
   level1 = {
     # Used by the release agent to deploy resources to level 1
     name               = "runner-level-1"
