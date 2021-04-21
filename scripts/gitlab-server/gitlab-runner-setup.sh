@@ -68,28 +68,28 @@ create_single_vm() {
       local level=$2
       _debug "Creating VM. Name: $vmName - Level: $level"
 
-      local vmCreateResult=$(create_vm "$vmName")
-      _debug "VM Create Result: $vmCreateResult"
+      # local vmCreateResult=$(create_vm "$vmName")
+      # _debug "VM Create Result: $vmCreateResult"
 
-      local publicIp=$(echo $vmCreateResult | jq -r '.publicIpAddress')
-      _debug "VM Created! Public Ip: $publicIp"
+      # local publicIp=$(echo $vmCreateResult | jq -r '.publicIpAddress')
+      # _debug "VM Created! Public Ip: $publicIp"
 
-      add_ip_to_known_hosts "$publicIp"
+      # add_ip_to_known_hosts "$publicIp"
 
-      wait_for_cloud_init_completion "$publicIp"
-      copy_cert_to_vm "$publicIp"
+      # wait_for_cloud_init_completion "$publicIp"
+      # copy_cert_to_vm "$publicIp"
 
       _debug "Loading MSI $vmName"
       local msiId=$(find_msi_by_level "$vmName" "$level")
       _debug "msiId $msiId"
 
-      local msiResourceId=$(get_msi_resource_id "$msiId")
-      _debug "msiResourceId: $msiResourceId"
+      # local msiResourceId=$(get_msi_resource_id "$msiId")
+      # _debug "msiResourceId: $msiResourceId"
 
-      assign_msi "$vmName" "$msiResourceId"
+      # assign_msi "$vmName" "$msiResourceId"
 
-      add_server_private_ip_to_hosts_file "$publicIp"
-      copy_custom_runner_image_to_vm "$publicIp" "$msiId" "$vmName"
+      # add_server_private_ip_to_hosts_file "$publicIp"
+      # copy_custom_runner_image_to_vm "$publicIp" "$msiId" "$vmName"
 }
 
 add_server_private_ip_to_hosts_file() {
@@ -112,6 +112,23 @@ get_msi_resource_id() {
     echo $resourceId
 }
 
+create_msi(){
+    local msg=""
+    local msi=""
+    local msiId=""
+    local msiClientId=""
+
+    # No MSI found, generate a new one per runner with Owner permission.
+    msi=$(az identity create -n "$msiName-test" -g $RESOURCE_GROUP --tags level="$level")
+    msiId=$(echo $msi | jq -r '.id')
+    msiClientId=$(echo $msi | jq -r '.clientId')
+
+    subId=$(az account show --query id --output tsv)
+    msg=$(az role assignment create --assignee $msiClientId --role "Owner" --subscription $subId)
+
+    echo $msiId
+}
+
 find_msi_by_level () {
     local msiName=$1
     local level="level$2"
@@ -119,19 +136,20 @@ find_msi_by_level () {
     if [ ! -z "$ENVIRONMENT" ]; then
       # Retrieve MSI created with CAF LaunchPad deployment.
       msiId=$(az identity list --query "[?tags.level == '$level' && tags.environment == '$ENVIRONMENT']".clientId -o tsv)
+    fi
 
-    elif [ ! -z "$CONFIG_PATH" ]; then
-      # Retrieve MSI from config file.
+    if [ ! -z "$CONFIG_PATH" ] && [ -z "$msiId" ]; then
+      # Retrieve MSI from config file if available and env MSI not found.
       msiId=$(yq -r '.levels[] | select(.level == "'$level'").msiId' $CONFIG_PATH)
+    fi
 
-    else
-       # No MSI provided, generate a new one per runner. Add contributor role to target subscription.
-      msiId=$(az identity create -n $msiName -g $RESOURCE_GROUP | jq -r ".id")
-
+    if [ -z "$msiId" ]; then
+      msiId=$(create_msi)
     fi
 
     echo $msiId
 }
+
 copy_custom_runner_image_to_vm() {
     local ip=$1
     local msiId=$2
