@@ -68,28 +68,28 @@ create_single_vm() {
       local level=$2
       _debug "Creating VM. Name: $vmName - Level: $level"
 
-      # local vmCreateResult=$(create_vm "$vmName")
-      # _debug "VM Create Result: $vmCreateResult"
+      local vmCreateResult=$(create_vm "$vmName")
+      _debug "VM Create Result: $vmCreateResult"
 
-      # local publicIp=$(echo $vmCreateResult | jq -r '.publicIpAddress')
-      # _debug "VM Created! Public Ip: $publicIp"
+      local publicIp=$(echo $vmCreateResult | jq -r '.publicIpAddress')
+      _debug "VM Created! Public Ip: $publicIp"
 
-      # add_ip_to_known_hosts "$publicIp"
+      add_ip_to_known_hosts "$publicIp"
 
-      # wait_for_cloud_init_completion "$publicIp"
-      # copy_cert_to_vm "$publicIp"
+      wait_for_cloud_init_completion "$publicIp"
+      copy_cert_to_vm "$publicIp"
 
       _debug "Loading MSI $vmName"
       local msiId=$(find_msi_by_level "$vmName" "$level")
       _debug "msiId $msiId"
 
-      # local msiResourceId=$(get_msi_resource_id "$msiId")
-      # _debug "msiResourceId: $msiResourceId"
+      local msiResourceId=$(get_msi_resource_id "$msiId")
+      _debug "msiResourceId: $msiResourceId"
 
-      # assign_msi "$vmName" "$msiResourceId"
+      assign_msi "$vmName" "$msiResourceId"
 
-      # add_server_private_ip_to_hosts_file "$publicIp"
-      # copy_custom_runner_image_to_vm "$publicIp" "$msiId" "$vmName"
+      add_server_private_ip_to_hosts_file "$publicIp"
+      copy_custom_runner_image_to_vm "$publicIp" "$msiId" "$vmName"
 }
 
 add_server_private_ip_to_hosts_file() {
