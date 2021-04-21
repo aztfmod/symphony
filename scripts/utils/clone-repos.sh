@@ -9,6 +9,7 @@ declare TARGET_FQDN=""
 declare LAUNCHPAD_ENV=""
 
 declare DEBUG_FLAG=false
+declare me=`basename "$0"`
 
 # includes
 source ../lib/shell_logger.sh
@@ -206,9 +207,16 @@ check_inputs(){
 usage() {
     local azStatusMessage
     if [ -x "$(command -v az)" ]; then
-        azStatusMessage=$(_success "installed - you're good to go!")
+        azStatusMessage=$(_success "installed - you're good to go!" )
     else
         azStatusMessage=$(_error "not installed")
+    fi
+
+    local jqStatusMessage
+    if [ -x "$(command -v jq)" ]; then
+        jqStatusMessage=$(_success "installed - you're good to go!")
+    else
+        jqStatusMessage=$(_error "not installed")
     fi
 
     _helpText=" Usage: $me
@@ -222,7 +230,8 @@ usage() {
   Note: Add User SSH key to user profile on both GitLab instances to allow read/write of repos.
 
    dependencies:
-   -az $azStatusMessage"
+   -az $azStatusMessage
+   -jq $jqStatusMessage"
 
     _information "$_helpText" 1>&2
     exit 1
