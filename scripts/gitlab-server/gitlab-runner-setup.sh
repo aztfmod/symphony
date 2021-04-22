@@ -18,7 +18,8 @@ declare MODE_FULL=false # true=1 vm 5 runners, 1 msi  false=5 vms 5 runner each 
 declare GITLAB_TOKEN=""
 declare GITLAB_DOMAIN=""
 declare GITLAB_URL=""
-declare CONFIG_PATH=./symphony.yml
+declare CONFIG_PATH=""
+declare ENVIRONMENT=""
 
 # includes
 source ../lib/shell_logger.sh
@@ -35,6 +36,7 @@ shArgs.arg "GITLAB_TOKEN" -gt --gitlab-token PARAMETER true
 shArgs.arg "GITLAB_DOMAIN" -gd --gitlab-domain PARAMETER true
 shArgs.arg "SERVER_INTERNAL_IP" -si --server-ip PARAMETER true
 shArgs.arg "CONFIG_PATH" -cp --config-path PARAMETER true
+shArgs.arg "ENVIRONMENT" -e --environment PARAMETER true
 
 shArgs.parse $@
 
@@ -47,7 +49,7 @@ main(){
 
     if [ "$MODE_FULL" == true ]; then
         _debug "Running in full mode."
-        for level in {1..5}; do
+        for level in {1..4}; do
             local vmName="$VM_PREFIX-$level"
             create_single_vm "$vmName" "$level"
         done
@@ -65,10 +67,10 @@ create_single_vm() {
       local vmName=$1
       local level=$2
       _debug "Creating VM. Name: $vmName - Level: $level"
-      
+
       local vmCreateResult=$(create_vm "$vmName")
       _debug "VM Create Result: $vmCreateResult"
-      
+
       local publicIp=$(echo $vmCreateResult | jq -r '.publicIpAddress')
       _debug "VM Created! Public Ip: $publicIp"
 
@@ -110,18 +112,50 @@ get_msi_resource_id() {
     echo $resourceId
 }
 
-find_msi_by_level () {
-    local level=$1
+create_msi(){
+    local msg=""
+    local msi=""
     local msiId=""
-    msiId=$(yq -r '.levels[] | select(.level == "level1").msiId' ../../.data/symphony.yml)
+    local msiClientId=""
+
+    # No MSI found, generate a new one per runner with Owner permission.
+    msi=$(az identity create -n "$msiName-test" -g $RESOURCE_GROUP --tags level="$level")
+    msiId=$(echo $msi | jq -r '.id')
+    msiClientId=$(echo $msi | jq -r '.clientId')
+
+    subId=$(az account show --query id --output tsv)
+    msg=$(az role assignment create --assignee $msiClientId --role "Owner" --subscription $subId)
+
     echo $msiId
 }
+
+find_msi_by_level () {
+    local msiName=$1
+    local level="level$2"
+    local msiId=""
+    if [ ! -z "$ENVIRONMENT" ]; then
+      # Retrieve MSI created with CAF LaunchPad deployment.
+      msiId=$(az identity list --query "[?tags.level == '$level' && tags.environment == '$ENVIRONMENT']".clientId -o tsv)
+    fi
+
+    if [ ! -z "$CONFIG_PATH" ] && [ -z "$msiId" ]; then
+      # Retrieve MSI from config file if available and env MSI not found.
+      msiId=$(yq -r '.levels[] | select(.level == "'$level'").msiId' $CONFIG_PATH)
+    fi
+
+    if [ -z "$msiId" ]; then
+      msiId=$(create_msi)
+    fi
+
+    echo $msiId
+}
+
 copy_custom_runner_image_to_vm() {
     local ip=$1
     local msiId=$2
     local agentName=$3
     scp -r ./runner/custom-agent "gitlab@$ip":~/
-    scp $CERT_PATH "gitlab@$ip":~/custom-agent/gitlab.crt 
+    scp $CERT_PATH "gitlab@$ip":~/custom-agent/gitlab.crt
     ssh gitlab@$ip "chmod +x ~/custom-agent/configure-runners.sh && cd ~/custom-agent && ./configure-runners.sh $msiId $GITLAB_TOKEN $GITLAB_URL $agentName $GITLAB_DOMAIN $SERVER_INTERNAL_IP"
 }
 
@@ -151,7 +185,7 @@ wait_for_cloud_init_completion() {
         _debug "sleeping for 10 seconds"
         sleep 10
         _debug "running: ssh gitlab@$ip 'cloud-init status'"
-        status=$(ssh gitlab@$ip 'cloud-init status')  
+        status=$(ssh gitlab@$ip 'cloud-init status')
         _debug "got status:$status."
     done
 }
@@ -162,7 +196,7 @@ check_command_status() {
   if [ "$status" != "0" ]; then
       _error "$result"
       exit $status
-  fi  
+  fi
 }
 
 check_public_key(){
@@ -177,8 +211,8 @@ _az(){
   az $command
 }
 
-check_inputs(){ 
-    GITLAB_URL="https://$GITLAB_DOMAIN/"  
+check_inputs(){
+    GITLAB_URL="https://$GITLAB_DOMAIN/"
     _debug_line_break
     _debug "      Subscription Id : $__SUBSCRIPTION_ID__"
     _debug "           Config Path: $CONFIG_PATH"
@@ -190,9 +224,9 @@ check_inputs(){
     _debug "            VM Prefix : $VM_PREFIX"
     _debug "            Full Mode : $MODE_FULL"
     _debug "         GitLab Token : $GITLAB_TOKEN"
-    _debug "        GitLab Domain : $GITLAB_DOMAIN"    
-    _debug "           Gitlab Url : $GITLAB_URL"    
-    _debug "    Server Private IP : $SERVER_INTERNAL_IP"        
+    _debug "        GitLab Domain : $GITLAB_DOMAIN"
+    _debug "           Gitlab Url : $GITLAB_URL"
+    _debug "    Server Private IP : $SERVER_INTERNAL_IP"
     _debug "                Debug : $DEBUG_FLAG"
     _debug_line_break
 
@@ -212,15 +246,15 @@ usage() {
         azStatusMessage=$(_success "installed - you're good to go!")
     else
         azStatusMessage=$(_error "not installed")
-    fi    
+    fi
 
     _helpText=" Usage: $me
   -d | --debug                          Turn debug logging on.
-   
+
    dependencies:
-   -az $azStatusMessage"               
+   -az $azStatusMessage"
     _information "$_helpText" 1>&2
     exit 1
-}  
+}
 
 main

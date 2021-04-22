@@ -28,6 +28,12 @@ dynamic_keyvault_secrets = {
       attribute_key = "name"
       secret_name   = "lower-resource-group-name"
     }
+    msi_id = {
+      output_key    = "managed_identities"
+      resource_key  = "level1"
+      attribute_key = "id"
+      secret_name   = "msi-resource-id"
+    }
     subscription_id = {
       output_key    = "client_config"
       attribute_key = "subscription_id"
@@ -51,6 +57,12 @@ dynamic_keyvault_secrets = {
       resource_key  = "level1"
       attribute_key = "name"
       secret_name   = "lower-resource-group-name"
+    }
+    msi_id = {
+      output_key    = "managed_identities"
+      resource_key  = "level2"
+      attribute_key = "id"
+      secret_name   = "msi-resource-id"
     }
     subscription_id = {
       output_key    = "client_config"
@@ -76,6 +88,12 @@ dynamic_keyvault_secrets = {
       attribute_key = "name"
       secret_name   = "lower-resource-group-name"
     }
+    msi_id = {
+      output_key    = "managed_identities"
+      resource_key  = "level3"
+      attribute_key = "id"
+      secret_name   = "msi-resource-id"
+    }
     subscription_id = {
       output_key    = "client_config"
       attribute_key = "subscription_id"
@@ -99,6 +117,12 @@ dynamic_keyvault_secrets = {
       resource_key  = "level3"
       attribute_key = "name"
       secret_name   = "lower-resource-group-name"
+    }
+    msi_id = {
+      output_key    = "managed_identities"
+      resource_key  = "level4"
+      attribute_key = "id"
+      secret_name   = "msi-resource-id"
     }
     subscription_id = {
       output_key    = "client_config"

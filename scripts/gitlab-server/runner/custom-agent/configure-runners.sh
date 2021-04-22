@@ -23,7 +23,7 @@ for i in {1..5}; do
              -e "MSI_ID=$MSI_ID" \
              -e AGENT_TOKEN=$GITLAB_TOKEN \
              -e AGENT_URL=$GITLAB_URL \
-             -e LABELS=rover,test, \
+             -e LABELS=rover,$GITLAB_AGENT_NAME, \
              -e WORK_FOLDER=./ \
              -e AGENT_NAME="$runnerName" \
              -e USERNAME=rover gitlab_agent

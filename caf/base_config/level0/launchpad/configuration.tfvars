@@ -21,8 +21,8 @@ default_region = "region1"
 inherit_tags = true
 
 regions = {
-  region1 = "southeastasia"
-  region2 = "eastasia"
+  region1 = "eastus2"
+  region2 = "eastus"
 }
 
 launchpad_key_names = {
@@ -62,6 +62,12 @@ resource_groups = {
     name = "launchpad-level4"
     tags = {
       level = "level4"
+    }
+  }
+  security = {
+    name = "launchpad-security"
+    tags = {
+      level = "level0"
     }
   }
 }

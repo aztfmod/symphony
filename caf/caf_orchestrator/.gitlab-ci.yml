@@ -11,35 +11,17 @@ variables:
 
 # Launchpad deployment done manually. See notes below.
 
+# Add MSI configs to Group CICD variables for yml.
+#   ARM_USE_MSI = true
+#   MSI_ID_0#   = MSI Client ID
+
 stages:
-  - launchpad
   - foundations
   - shared_services
   - networking
   - aks
   - data_analytics
   - argocd
-
-launchpad:
-  stage: launchpad
-  tags:
-    - rover
-  script:
-    - |
-      env
-
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/base_config.git
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_public.git
-
-      az login --identity --username ${MSI_ID}
-
-      /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_public/landingzones/caf_launchpad \
-        -launchpad \
-        -var-folder ${CI_PROJECT_DIR}/base_config/level0/launchpad \
-        -parallelism 30 \
-        -level level0 \
-        -env demo \
-        -a apply
 
 foundations:
   stage: foundations
@@ -50,14 +32,14 @@ foundations:
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/base_config.git
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_public.git
 
-      az login --identity --username ${MSI_ID}
+      az login --identity --username ${MSI_ID_01}
 
       /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_public/landingzones/caf_foundations \
       -var-folder ${CI_PROJECT_DIR}/base_config/level1 \
       -parallelism 30 \
       -level level1 \
       -env demo \
-      -a apply             
+      -a apply
 
 
 shared_services:
@@ -69,7 +51,7 @@ shared_services:
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/base_config.git
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_public.git
 
-      az login --identity --username ${MSI_ID}
+      az login --identity --username ${MSI_ID_02}
 
       /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_public/landingzones/caf_shared_services \
       -tfstate caf_shared_services.tfstate \
@@ -89,7 +71,7 @@ networking:
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/base_config.git
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_public.git
 
-      az login --identity --username ${MSI_ID}
+      az login --identity --username ${MSI_ID_02}
 
       /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_public/landingzones/caf_networking \
       -tfstate networking_hub.tfstate \
@@ -113,7 +95,7 @@ aks:
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/app_config_aks.git
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_app.git
 
-      az login --identity --username ${MSI_ID}
+      az login --identity --username ${MSI_ID_03}
 
       /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_app/landingzones/caf_solutions \
       -tfstate landing_zone_aks.tfstate \
@@ -132,7 +114,7 @@ argocd:
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/app_config_argocd.git
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_app.git
 
-      az login --identity --username ${MSI_ID}
+      az login --identity --username ${MSI_ID_04}
 
       /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_app/landingzones/caf_solutions/add-ons/aks_applications \
       -tfstate ${application}1.tfstate \
@@ -154,16 +136,17 @@ argocd:
 #     - rover
 #   script:
 #     - |
+#       env
+
 #       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/base_config.git
 #       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_public.git
-#       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_app.git
 
-#       az login --identity
+#       az login --identity --username ${MSI_ID}
 
-#       /tf/rover/rover.sh -lz caf_modules_public/landingzones/caf_launchpad \
-#       -var-folder base_config/level0/launchpad \
-#       -level level0 \
-#       -env ${environment} \
-#       -launchpad \
-#       -a apply
-  
+#       /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_public/landingzones/caf_launchpad \
+#         -launchpad \
+#         -var-folder ${CI_PROJECT_DIR}/base_config/level0/launchpad \
+#         -parallelism 30 \
+#         -level level0 \
+#         -env demo \
+#         -a apply

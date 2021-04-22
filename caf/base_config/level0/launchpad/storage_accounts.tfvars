@@ -9,9 +9,8 @@ storage_accounts = {
     tags = {
       ## Those tags must never be changed after being set as they are used by the rover to locate the launchpad and the tfstates.
       # Only adjust the environment value at creation time
-      tfstate     = "level0"
-      environment = "sandpit"
-      launchpad   = "launchpad"
+      tfstate   = "level0"
+      launchpad = "launchpad"
       ##
     }
     containers = {
@@ -30,9 +29,8 @@ storage_accounts = {
     account_replication_type = "RAGRS"
     tags = {
       # Those tags must never be changed while set as they are used by the rover to locate the launchpad and the tfstates.
-      tfstate     = "level1"
-      environment = "sandpit"
-      launchpad   = "launchpad"
+      tfstate   = "level1"
+      launchpad = "launchpad"
     }
     containers = {
       tfstate = {
@@ -49,9 +47,8 @@ storage_accounts = {
     account_replication_type = "RAGRS"
     tags = {
       # Those tags must never be changed while set as they are used by the rover to locate the launchpad and the tfstates.
-      tfstate     = "level2"
-      environment = "sandpit"
-      launchpad   = "launchpad"
+      tfstate   = "level2"
+      launchpad = "launchpad"
     }
     containers = {
       tfstate = {
@@ -68,9 +65,8 @@ storage_accounts = {
     account_replication_type = "RAGRS"
     tags = {
       # Those tags must never be changed while set as they are used by the rover to locate the launchpad and the tfstates.
-      tfstate     = "level3"
-      environment = "sandpit"
-      launchpad   = "launchpad"
+      tfstate   = "level3"
+      launchpad = "launchpad"
     }
     containers = {
       tfstate = {
@@ -87,9 +83,8 @@ storage_accounts = {
     account_replication_type = "RAGRS"
     tags = {
       # Those tags must never be changed while set as they are used by the rover to locate the launchpad and the tfstates.
-      tfstate     = "level4"
-      environment = "sandpit"
-      launchpad   = "launchpad"
+      tfstate   = "level4"
+      launchpad = "launchpad"
     }
     containers = {
       tfstate = {
