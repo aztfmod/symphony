@@ -33,6 +33,10 @@ launchpad_key_names = {
   ]
 }
 
+provider_azurerm_features_keyvault = {
+  purge_soft_delete_on_destroy = true
+}
+
 resource_groups = {
   level0 = {
     name = "launchpad-level0"

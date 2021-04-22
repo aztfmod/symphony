@@ -1,0 +1,51 @@
+{
+  "name": "Symphony GitLab Demo Application",
+  "version": "0.1.0",
+  "private": "false",
+  "dependencies": {
+    "aztfmod/rover": {
+      "version": "2007.2408",
+      "docker-vscode": "aztfmod/rover:0.13.6-2104.1611",
+      "docker-gitlab-agent": "aztfmod/rover-agent:0.13.6-2104.1611-gitlab",
+      "env": {
+        "versionAzureCli": "2.21.0",
+        "versionKubectl": "1.21.0",
+        "versionGit": "2.25.1",
+        "versionTflint": "0.24.1",
+        "versionJq": "1.6",
+        "versionDockerCompose": "1.27.4",
+        "versionTfsec": "0.38.4",
+        "versionTerraformDocs": "0.11.1",
+        "versionAnsible": " 2.9.6",
+        "versionPacker": "1.7.2",
+        "versionCheckov": ".0.866",
+        "versionMssqlTools": ".7.1.1"
+      },
+      "agent": {
+        "versionAzdo": "2.182.1",
+        "versionGithubRunner": "2.277.1",
+        "versionTfc": "0.1.8",
+        "versionGitlab": "13.8.0"
+      }
+    },
+    "aztfmod/terraform-azurerm-caf": {
+      "azurerm": "~> 2.55.0",
+      "aztfmod/azurecaf": "~> 1.2.0",
+      "terraform": ">= 0.13",
+      "docker-vscode": "aztfmod/rover:0.15.0-2104.1611"
+    }
+  },
+  "landing-zones": {
+    "source": "aztfmod/caf/azurerm",
+    "version": "~>5.3.0",
+    "providers": {
+      "hashicorp/azurerm": "~> 2.43",
+      "hashicorp/azuread": "~> 1.4.0",
+      "hashicorp/random": "~> 2.2.1",
+      "hashicorp/null": "~> 2.1.0",
+      "hashicorp/tls": "~> 2.2.0",
+      "aztfmod/azurecaf": "~> 1.2.0",
+      "terraform": ">= 0.13"
+    }
+  }
+}
