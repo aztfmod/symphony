@@ -26,7 +26,7 @@ stages:
 foundations:
   stage: foundations
   tags:
-    - rover
+    - gitlab-runner-1
   script:
     - |
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/base_config.git
@@ -45,7 +45,7 @@ foundations:
 shared_services:
   stage: shared_services
   tags:
-    - rover
+    - gitlab-runner-2
   script:
     - |
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/base_config.git
@@ -65,7 +65,7 @@ shared_services:
 networking:
   stage: networking
   tags:
-    - rover
+    - gitlab-runner-2
   script:
     - |
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/base_config.git
@@ -89,7 +89,7 @@ networking:
 aks:
   stage: aks
   tags:
-    - rover
+    - gitlab-runner-3
   script:
     - |
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/app_config_aks.git
@@ -108,7 +108,7 @@ aks:
 argocd:
   stage: argocd
   tags:
-    - rover
+    - gitlab-runner-4
   script:
     - |
       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/app_config_argocd.git

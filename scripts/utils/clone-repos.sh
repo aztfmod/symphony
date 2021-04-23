@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
 # variables
-declare GROUP_NAME=""
+declare SOURCE_GROUP=""
+declare SOURCE_LOCAL_PATH=""
 declare SOURCE_PAT=""
 declare SOURCE_FQDN=""
 declare TARGET_PAT=""
 declare TARGET_FQDN=""
+declare TARGET_OVERWRITE=false
 declare LAUNCHPAD_ENV=""
 
 declare DEBUG_FLAG=false
@@ -17,11 +19,14 @@ source ../lib/sh_arg.sh
 source ../lib/utils.sh
 
 # register & arguments
-shArgs.arg "GROUP_NAME" -g --group PARAMETER true
+shArgs.arg "SOURCE_GROUP" -g --group PARAMETER true
+shArgs.arg "SOURCE_LOCAL_PATH" -s --source-local-path PARAMETER true
 shArgs.arg "SOURCE_PAT" -sp --source-pat PARAMETER true
 shArgs.arg "SOURCE_FQDN" -sd --source-fqdn PARAMETER true
 shArgs.arg "TARGET_PAT" -tp --target-pat PARAMETER true
 shArgs.arg "TARGET_FQDN" -td --target-fqdn PARAMETER true
+shArgs.arg "TARGET_FQDN" -td --target-fqdn PARAMETER true
+shArgs.arg "TARGET_OVERWRITE" -o --target-overwrite FLAG true
 shArgs.arg "LAUNCHPAD_ENV" -e --environment PARAMETER true
 
 shArgs.arg "DEBUG_FLAG" -d --debug FLAG true
@@ -31,8 +36,14 @@ shArgs.parse $@
 function main() {
     check_inputs
 
-    # Download source repos
-    cloneRepos "source" $SOURCE_FQDN $SOURCE_PAT
+    # Get source code
+    if [ ! -z "$SOURCE_PAT" ] && [ ! -z "$SOURCE_PAT" ]; then
+      cloneRepos "source" $SOURCE_FQDN $SOURCE_PAT
+    fi
+
+    if [ ! -z "$SOURCE_LOCAL_PATH" ]; then
+      getLocalSource  "source" $SOURCE_LOCAL_PATH
+    fi
 
     # Get or create target Gitlab group and projects
     confirmOrCreateTargetRepos
@@ -48,6 +59,8 @@ function main() {
 
     # Push target code to Gitlab repo
     pushRepos "target"
+
+    _success "Repos successfully deployed to https://$TARGET_FQDN/$SOURCE_GROUP"
 }
 
 function cloneRepos() {
@@ -56,9 +69,9 @@ function cloneRepos() {
     local pat=$3
     local groupId=""
 
-    _information "Copying all repos in $fqdn under the $GROUP_NAME group."
+    _information "Copying all repos in $fqdn under the $SOURCE_GROUP group."
 
-    groupId=$(curl -sk "https://$fqdn/api/v4/groups?private_token=$pat" | jq '.[] | select(.name=="'$GROUP_NAME'")' | jq '.id')
+    groupId=$(curl -sk "https://$fqdn/api/v4/groups?private_token=$pat" | jq '.[] | select(.name=="'$SOURCE_GROUP'")' | jq '.id')
     _debug "Group $path ID: $groupId"
 
     rm -rf $path
@@ -67,23 +80,38 @@ function cloneRepos() {
     _debug "Getting repos for https://$fqdn/api/v4/groups/$groupId"
     for repo in $(curl -sk --header "PRIVATE-TOKEN: $pat" https://$fqdn/api/v4/groups/$groupId | jq ".projects[].ssh_url_to_repo" | tr -d '"'); do
       _debug "Cloning $repo"
-      git clone $repo;
+      git clone $repo
     done
     cd ../
+}
+
+function getLocalSource() {
+  local path=$1
+  local caf=$2
+
+  _information "Getting local source folders of repos."
+
+  SOURCE_GROUP=$(basename $caf)
+  rm -rf $path
+  cp -R $caf ./$path
+  find ./$path -maxdepth 1 -type f -exec rm {} +
 }
 
 function confirmOrCreateTargetRepos() {
     local groupId=""
     local projectId=""
 
-    _information "Confirm or create target repos in GitLab"
+    _information "Getting or creating target repos."
 
-    groupId=$(curl -sk "https://$TARGET_FQDN/api/v4/groups?private_token=$TARGET_PAT" | jq '.[] | select(.name=="'$GROUP_NAME'")' | jq '.id')
-    _debug "Target group ID: $groupId"
+    if [ "$TARGET_OVERWRITE" = false ]; then
+      SOURCE_GROUP+="_"$(date "+%Y%m%d_%s")
+    fi
+
+    groupId=$(curl -sk "https://$TARGET_FQDN/api/v4/groups?private_token=$TARGET_PAT" | jq '.[] | select(.name=="'$SOURCE_GROUP'")' | jq '.id')
 
    if [ -z $groupId ]; then
-        _information "Group not found in target, creating target group and repos."
-        groupId=$(curl -sk --request POST --header "PRIVATE-TOKEN: $TARGET_PAT" --header "Content-Type: application/json" --data '{"path": "'$GROUP_NAME'", "name": "'$GROUP_NAME'", "visibility": "internal" }' "https://$TARGET_FQDN/api/v4/groups/" | jq '.["id"]')
+        _information "Target group not found, creating target group and repos."
+        groupId=$(curl -sk --request POST --header "PRIVATE-TOKEN: $TARGET_PAT" --header "Content-Type: application/json" --data '{"path": "'$SOURCE_GROUP'", "name": "'$SOURCE_GROUP'", "visibility": "internal" }' "https://$TARGET_FQDN/api/v4/groups/" | jq '.["id"]')
         _debug "Group created ID: $groupId"
 
         cd source
@@ -94,13 +122,15 @@ function confirmOrCreateTargetRepos() {
             fi
         done
         cd ../
+    else
+      _debug "Found target group ID: $groupId"
     fi
 
     if [ ! -z "$LAUNCHPAD_ENV" ]; then
         verify_tool_exists "az"
         check_az_is_logged_in
 
-        # Add vars to group for runner execution
+        _information "Adding or updating group variables."
         addTargetGroupVariable $groupId "GODEBUG" "x509ignoreCN=0"
         addTargetGroupVariable $groupId "ARM_USE_MSI" "true"
 
@@ -110,7 +140,6 @@ function confirmOrCreateTargetRepos() {
             local key="MSI_ID_0$i"
             msiId=$(az identity list --query "[?tags.level == '$level' && tags.environment == '$LAUNCHPAD_ENV']".clientId -o tsv)
             if [ ! -z $msiId ]; then
-                echo "Adding $msiId with key $key for $level runners"
                 addTargetGroupVariable $groupId $key $msiId
             fi
         done
@@ -122,14 +151,15 @@ function addTargetGroupVariable() {
     local key=$2
     local value=$3
 
-    curl -sk --request POST --header "PRIVATE-TOKEN: $TARGET_PAT" "https://$TARGET_FQDN/api/v4/groups/$groupId/variables" --form "key=$key" --form "value=$value"
+    _debug "Passing group var '$key' = '$value'"
+    msg=$(curl -sk --request POST --header "PRIVATE-TOKEN: $TARGET_PAT" "https://$TARGET_FQDN/api/v4/groups/$groupId/variables" --form "key=$key" --form "value=$value")
 }
 
 function copySourceCodeToTarget() {
     local sourcePath=$1
     local targetPath=$2
 
-    _information "Copy source files to target while preserving git info."
+    _information "Copying source files to target while preserving .git info."
 
     cp -R $sourcePath ./temp
     find ./temp -name ".git" -exec rm -rf {} +
@@ -143,7 +173,7 @@ function copySourceCodeToTarget() {
 function updateFQDN() {
     local codePath=$1
 
-    _information "Find and update FQDN references to $TARGET_FQDN"
+    _information "Updating FQDN references."
 
     cd $codePath
     find . -type f -exec sed -i 's/'$SOURCE_FQDN'/'$TARGET_FQDN'/g' {} +
@@ -154,14 +184,14 @@ function updateFQDN() {
 function pushRepos() {
     local repoPath=$1
 
-    _information "Run Git add, commit and push on all repos in $repoPath"
+    _information "Pushing all repos."
 
     cd $repoPath
     for f in *; do
        if [ -d "$f" ]; then
-            echo "Pushing $f"
+            _debug "Pushing repo $f"
             git -C $f add .
-            git -C $f commit -m "updated"
+            git -C $f commit -m "updated via clone-repo.sh"
             git -C $f push
         fi
     done
@@ -170,36 +200,40 @@ function pushRepos() {
 }
 
 check_inputs(){
-    local req+=""
+    local req=""
+    local sourceValid=0
 
     _debug_line_break
-    _debug " GitLab Group : $GROUP_NAME"
-    _debug "   Source PAT : $SOURCE_PAT"
-    _debug "  Source FQDN : $SOURCE_FQDN"
-    _debug "   Target PAT : $TARGET_PAT"
-    _debug "  Target FQDN : $TARGET_FQDN"
-    _debug "  Environment : $LAUNCHPAD_ENV"
-    _debug "        Debug : $DEBUG_FLAG"
+    _debug "       Local Path : $SOURCE_LOCAL_PATH"
+    _debug "     Source Group : $SOURCE_GROUP"
+    _debug "       Source PAT : $SOURCE_PAT"
+    _debug "      Source FQDN : $SOURCE_FQDN"
+    _debug "       Target PAT : $TARGET_PAT"
+    _debug "      Target FQDN : $TARGET_FQDN"
+    _debug " Overwrite Target : $TARGET_OVERWRITE"
+    _debug "      Environment : $LAUNCHPAD_ENV"
+    _debug "            Debug : $DEBUG_FLAG"
     _debug_line_break
 
-    if [ -z "$GROUP_NAME" ]; then
-        req+="Group, "
+
+    if [ ! -z "$SOURCE_LOCAL_PATH" ]; then
+        sourceValid=1
+    elif [ ! -z "$SOURCE_GROUP" ] && [ ! -z "$SOURCE_PAT" ] && [ ! -z "$SOURCE_FQDN" ]; then
+        sourceValid=1
     fi
-    if [ -z "$SOURCE_PAT" ]; then
-        req+="Source PAT, "
+
+    if [ $sourceValid -eq 0 ]; then
+        req+="Source {Local Path} or GitLab Server {Group, PAT and FQDN}, "
     fi
-    if [ -z "$SOURCE_FQDN" ]; then
-        req+="Source FQDN, "
-    fi
+
     if [ -z "$TARGET_PAT" ]; then
         req+="Target PAT, "
     fi
     if [ -z "$TARGET_FQDN" ]; then
         req+="Target FQDN, "
     fi
-
     if [ ! -z "$req" ]; then
-      _error "Require GitLab Server ${req:0:${#req}-2}"
+      _error "Require ${req:0:${#req}-2}"
       usage
     fi
 }
@@ -220,14 +254,18 @@ usage() {
     fi
 
     _helpText=" Usage: $me
-  -g  | --group <GitLab_Group>                   REQUIRED: GitLab from server group to copy repo(s).
+  -s | --source-local-path <Local_Path>          REQUIRED: Local folder path with project folders one level deep.
+                                                 OR
+  -g  | --group <GitLab_Source_Group>            REQUIRED: GitLab from server group to copy repo(s).
   -sp | --source-pat <GitLab_Source_PAT>         REQUIRED: GitLab from server user PAT with api and read_repository scopes.
   -sd | --source-fqdn <GitLab_Source_FQDN>       REQUIRED: GitLab from server fully qualified domain name, no https or path.
+                                                 AND
   -tp | --target-pat <GitLab_Target_PAT>         REQUIRED: GitLab to server user PAT with api, read_repository and write_repository scopes.
   -td | --target-fqdn <GitLab_Target_FQDN>       REQUIRED: GitLab to server fully qualified domain name, no https or path.
+  -o  | --target-overwrite <Target_Overwrite>    OPTIONAL: GitLab to server group overwrite repo if exists flag.
   -e  | --environment <Launchpad_Environment>    OPTIONAL: Launchpad environment, if provided will add GODEBUG and MSIs to target group.
 
-  Note: Add User SSH key to user profile on both GitLab instances to allow read/write of repos.
+  Note: Add User SSH key to user profile on GitLab instance(s) to allow read/write of repos!
 
    dependencies:
    -az $azStatusMessage
