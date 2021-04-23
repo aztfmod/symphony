@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": "false",
   "dependencies": {
-    "aztfmod/rover": {
+    "rover": {
+      "source": "aztfmod/rover",
       "version": "2007.2408",
       "docker-vscode": "aztfmod/rover:0.13.6-2104.1611",
       "docker-gitlab-agent": "aztfmod/rover-agent:0.13.6-2104.1611-gitlab",
-      "env": {
+      "docker-env": {
         "versionAzureCli": "2.21.0",
         "versionKubectl": "1.21.0",
         "versionGit": "2.25.1",
@@ -21,33 +22,33 @@
         "versionCheckov": ".0.866",
         "versionMssqlTools": ".7.1.1"
       },
-      "agent": {
+      "gitlab-agent": {
         "versionAzdo": "2.182.1",
         "versionGithubRunner": "2.277.1",
         "versionTfc": "0.1.8",
         "versionGitlab": "13.8.0"
       }
-    }
-  },
-  "landing-zones": {
-    "aztfmod/terraform-azurerm-caf": {
-      "source": "aztfmod/caf/azurerm",
-      "version": "~>5.3.0",
-      "env": {
-        "docker-vscode": "aztfmod/rover:0.15.0-2104.1611",
-        "azurerm": "~> 2.55.0",
+    },
+    "terraform": {
+      "landing-zone": {
+        "source": "aztfmod/caf/azurerm",
+        "version": "~>5.3.0",
+        "env": {
+          "docker-vscode": "aztfmod/rover:0.15.0-2104.1611",
+          "azurerm": "~> 2.55.0",
+          "aztfmod/azurecaf": "~> 1.2.0",
+          "terraform": ">= 0.13"
+        }
+      },
+      "providers": {
+        "hashicorp/azurerm": "~> 2.43",
+        "hashicorp/azuread": "~> 1.4.0",
+        "hashicorp/random": "~> 2.2.1",
+        "hashicorp/null": "~> 2.1.0",
+        "hashicorp/tls": "~> 2.2.0",
         "aztfmod/azurecaf": "~> 1.2.0",
         "terraform": ">= 0.13"
       }
-    },
-    "providers": {
-      "hashicorp/azurerm": "~> 2.43",
-      "hashicorp/azuread": "~> 1.4.0",
-      "hashicorp/random": "~> 2.2.1",
-      "hashicorp/null": "~> 2.1.0",
-      "hashicorp/tls": "~> 2.2.0",
-      "aztfmod/azurecaf": "~> 1.2.0",
-      "terraform": ">= 0.13"
     }
   }
 }
