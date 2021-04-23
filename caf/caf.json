@@ -27,17 +27,19 @@
         "versionTfc": "0.1.8",
         "versionGitlab": "13.8.0"
       }
-    },
-    "aztfmod/terraform-azurerm-caf": {
-      "azurerm": "~> 2.55.0",
-      "aztfmod/azurecaf": "~> 1.2.0",
-      "terraform": ">= 0.13",
-      "docker-vscode": "aztfmod/rover:0.15.0-2104.1611"
     }
   },
   "landing-zones": {
-    "source": "aztfmod/caf/azurerm",
-    "version": "~>5.3.0",
+    "aztfmod/terraform-azurerm-caf": {
+      "source": "aztfmod/caf/azurerm",
+      "version": "~>5.3.0",
+      "env": {
+        "docker-vscode": "aztfmod/rover:0.15.0-2104.1611",
+        "azurerm": "~> 2.55.0",
+        "aztfmod/azurecaf": "~> 1.2.0",
+        "terraform": ">= 0.13"
+      }
+    },
     "providers": {
       "hashicorp/azurerm": "~> 2.43",
       "hashicorp/azuread": "~> 1.4.0",
