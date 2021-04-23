@@ -40,221 +40,218 @@ shArgs.arg "ENVIRONMENT" -e --environment PARAMETER true
 
 shArgs.parse $@
 
-main(){
-    print_banner
-    verify_tool_exists "az"
-    check_inputs
+main() {
+  print_banner
+  verify_tool_exists "az"
+  check_inputs
 
-    check_az_is_logged_in
+  check_az_is_logged_in
 
-    if [ "$MODE_FULL" == true ]; then
-        _debug "Running in full mode."
-        for level in {1..4}; do
-            local vmName="$VM_PREFIX-$level"
-            create_single_vm "$vmName" "$level"
-        done
-    else
-        _debug "Running in basic mode. "
-        local vmName="$VM_PREFIX-1"
-        create_single_vm "$vmName" "1"
-    fi;
+  if [ "$MODE_FULL" == true ]; then
+    _debug "Running in full mode."
+    for level in {1..4}; do
+      local vmName="$VM_PREFIX-$level"
+      create_single_vm "$vmName" "$level"
+    done
+  else
+    _debug "Running in basic mode. "
+    local vmName="$VM_PREFIX-1"
+    create_single_vm "$vmName" "1"
+  fi
 
-    _success "GitLab Runner VM Created!"
+  _success "GitLab Runner VM Created!"
 }
 
-
 create_single_vm() {
-      local vmName=$1
-      local level=$2
-      _debug "Creating VM. Name: $vmName - Level: $level"
+  local vmName=$1
+  local level=$2
+  _debug "Creating VM. Name: $vmName - Level: $level"
 
-      local vmCreateResult=$(create_vm "$vmName")
-      _debug "VM Create Result: $vmCreateResult"
+  local vmCreateResult=$(create_vm "$vmName")
+  _debug "VM Create Result: $vmCreateResult"
 
-      local publicIp=$(echo $vmCreateResult | jq -r '.publicIpAddress')
-      _debug "VM Created! Public Ip: $publicIp"
+  local publicIp=$(echo $vmCreateResult | jq -r '.publicIpAddress')
+  _debug "VM Created! Public Ip: $publicIp"
 
-      add_ip_to_known_hosts "$publicIp"
+  add_ip_to_known_hosts "$publicIp"
 
-      wait_for_cloud_init_completion "$publicIp"
-      copy_cert_to_vm "$publicIp"
+  wait_for_cloud_init_completion "$publicIp"
+  copy_cert_to_vm "$publicIp"
 
-      _debug "Loading MSI $vmName"
-      local msiId=$(find_msi_by_level "$vmName" "$level")
-      _debug "msiId $msiId"
+  _debug "Loading MSI $vmName"
+  local msiId=$(find_msi_by_level "$vmName" "$level")
+  _debug "msiId $msiId"
 
-      local msiResourceId=$(get_msi_resource_id "$msiId")
-      _debug "msiResourceId: $msiResourceId"
+  local msiResourceId=$(get_msi_resource_id "$msiId")
+  _debug "msiResourceId: $msiResourceId"
 
-      assign_msi "$vmName" "$msiResourceId"
+  assign_msi "$vmName" "$msiResourceId"
 
-      add_server_private_ip_to_hosts_file "$publicIp"
-      copy_custom_runner_image_to_vm "$publicIp" "$msiId" "$vmName"
+  add_server_private_ip_to_hosts_file "$publicIp"
+  copy_custom_runner_image_to_vm "$publicIp" "$msiId" "$vmName"
 }
 
 add_server_private_ip_to_hosts_file() {
-    local ip=$1
-    _debug "echo '$SERVER_INTERNAL_IP $GITLAB_DOMAIN' | sudo tee -a /etc/hosts"
+  local ip=$1
+  _debug "echo '$SERVER_INTERNAL_IP $GITLAB_DOMAIN' | sudo tee -a /etc/hosts"
 
-    ssh gitlab@$ip  "echo '$SERVER_INTERNAL_IP $GITLAB_DOMAIN' | sudo tee -a /etc/hosts"
+  ssh gitlab@$ip "echo '$SERVER_INTERNAL_IP $GITLAB_DOMAIN' | sudo tee -a /etc/hosts"
 }
 
 assign_msi() {
-    local vmName=$1
-    local resourceId=$2
-    az vm identity assign -g $RESOURCE_GROUP -n $vmName --identities $resourceId
+  local vmName=$1
+  local resourceId=$2
+  az vm identity assign -g $RESOURCE_GROUP -n $vmName --identities $resourceId
 }
 
 get_msi_resource_id() {
-    local msiId=$1
-    local resourceId=""
-    resourceId=$(az identity list --query "[?clientId=='$msiId'].{id:id}" -o tsv)
-    echo $resourceId
+  local msiId=$1
+  local resourceId=""
+  resourceId=$(az identity list --query "[?clientId=='$msiId'].{id:id}" -o tsv)
+  echo $resourceId
 }
 
-create_msi(){
-    local msg=""
-    local msi=""
-    local msiId=""
-    local msiClientId=""
+create_msi() {
+  local msg=""
+  local msi=""
+  local msiId=""
+  local msiClientId=""
 
-    # No MSI found, generate a new one per runner with Owner permission.
-    msi=$(az identity create -n "$msiName-test" -g $RESOURCE_GROUP --tags level="$level")
-    msiId=$(echo $msi | jq -r '.id')
-    msiClientId=$(echo $msi | jq -r '.clientId')
+  # No MSI found, generate a new one per runner with Owner permission.
+  msi=$(az identity create -n "$msiName-test" -g $RESOURCE_GROUP --tags level="$level")
+  msiId=$(echo $msi | jq -r '.id')
+  msiClientId=$(echo $msi | jq -r '.clientId')
 
-    subId=$(az account show --query id --output tsv)
-    msg=$(az role assignment create --assignee $msiClientId --role "Owner" --subscription $subId)
+  subId=$(az account show --query id --output tsv)
+  msg=$(az role assignment create --assignee $msiClientId --role "Owner" --subscription $subId)
 
-    echo $msiId
+  echo $msiId
 }
 
-find_msi_by_level () {
-    local msiName=$1
-    local level="level$2"
-    local msiId=""
-    if [ ! -z "$ENVIRONMENT" ]; then
-      # Retrieve MSI created with CAF LaunchPad deployment.
-      msiId=$(az identity list --query "[?tags.level == '$level' && tags.environment == '$ENVIRONMENT']".clientId -o tsv)
-    fi
+find_msi_by_level() {
+  local msiName=$1
+  local level="level$2"
+  local msiId=""
+  if [ ! -z "$ENVIRONMENT" ]; then
+    # Retrieve MSI created with CAF LaunchPad deployment.
+    msiId=$(az identity list --query "[?tags.level == '$level' && tags.environment == '$ENVIRONMENT']".clientId -o tsv)
+  fi
 
-    if [ ! -z "$CONFIG_PATH" ] && [ -z "$msiId" ]; then
-      # Retrieve MSI from config file if available and env MSI not found.
-      msiId=$(yq -r '.levels[] | select(.level == "'$level'").msiId' $CONFIG_PATH)
-    fi
+  if [ ! -z "$CONFIG_PATH" ] && [ -z "$msiId" ]; then
+    # Retrieve MSI from config file if available and env MSI not found.
+    msiId=$(yq -r '.levels[] | select(.level == "'$level'").msiId' $CONFIG_PATH)
+  fi
 
-    if [ -z "$msiId" ]; then
-      msiId=$(create_msi)
-    fi
+  if [ -z "$msiId" ]; then
+    msiId=$(create_msi)
+  fi
 
-    echo $msiId
+  echo $msiId
 }
 
 copy_custom_runner_image_to_vm() {
-    local ip=$1
-    local msiId=$2
-    local agentName=$3
-    scp -r ./runner/custom-agent "gitlab@$ip":~/
-    scp $CERT_PATH "gitlab@$ip":~/custom-agent/gitlab.crt
-    ssh gitlab@$ip "chmod +x ~/custom-agent/configure-runners.sh && cd ~/custom-agent && ./configure-runners.sh $msiId $GITLAB_TOKEN $GITLAB_URL $agentName $GITLAB_DOMAIN $SERVER_INTERNAL_IP"
+  local ip=$1
+  local msiId=$2
+  local agentName=$3
+  scp -r ./runner/custom-agent "gitlab@$ip":~/
+  scp $CERT_PATH "gitlab@$ip":~/custom-agent/gitlab.crt
+  ssh gitlab@$ip "chmod +x ~/custom-agent/configure-runners.sh && cd ~/custom-agent && ./configure-runners.sh $msiId $GITLAB_TOKEN $GITLAB_URL $agentName $GITLAB_DOMAIN $SERVER_INTERNAL_IP"
 }
 
 copy_cert_to_vm() {
-    local ip=$1
-    scp $CERT_PATH "gitlab@$ip":~/gitlab.crt
-    ssh gitlab@$ip 'sudo mv ~/gitlab.crt /usr/local/share/ca-certificates/gitlab.crt'
-    ssh gitlab@$ip 'sudo update-ca-certificates '
+  local ip=$1
+  scp $CERT_PATH "gitlab@$ip":~/gitlab.crt
+  ssh gitlab@$ip 'sudo mv ~/gitlab.crt /usr/local/share/ca-certificates/gitlab.crt'
+  ssh gitlab@$ip 'sudo update-ca-certificates '
 }
 
 create_vm() {
-    local vmName=$1
-    result=$(az vm create -n $vmName -g $RESOURCE_GROUP --size $VM_SIZE --image $VM_IMAGE --storage-sku Premium_LRS --admin-username gitlab --ssh-key-values $PUBLIC_KEY --custom-data "runner/cloud-config.yml" 2>&1)
-    check_command_status "$result" $?
-    echo $result
+  local vmName=$1
+  result=$(az vm create -n $vmName -g $RESOURCE_GROUP --size $VM_SIZE --image $VM_IMAGE --storage-sku Premium_LRS --admin-username gitlab --ssh-key-values $PUBLIC_KEY --custom-data "runner/cloud-config.yml" 2>&1)
+  check_command_status "$result" $?
+  echo $result
 }
 
 wait_for_cloud_init_completion() {
-    sleep 5
-    local ip=$1
-    _information "Waiting for cloud init to complete."
-    _debug "running: ssh gitlab@$ip 'cloud-init status'"
+  sleep 5
+  local ip=$1
+  _information "Waiting for cloud init to complete."
+  _debug "running: ssh gitlab@$ip 'cloud-init status'"
 
+  status=$(ssh gitlab@$ip 'cloud-init status')
+  _debug "got status:$status."
+  while [ "$status" != "status: done" ]; do
+    _debug "sleeping for 10 seconds"
+    sleep 10
+    _debug "running: ssh gitlab@$ip 'cloud-init status'"
     status=$(ssh gitlab@$ip 'cloud-init status')
     _debug "got status:$status."
-    while [ "$status" != "status: done" ]; do
-        _debug "sleeping for 10 seconds"
-        sleep 10
-        _debug "running: ssh gitlab@$ip 'cloud-init status'"
-        status=$(ssh gitlab@$ip 'cloud-init status')
-        _debug "got status:$status."
-    done
+  done
 }
 
 check_command_status() {
   local result=$1
   local status=$2
   if [ "$status" != "0" ]; then
-      _error "$result"
-      exit $status
+    _error "$result"
+    exit $status
   fi
 }
 
-check_public_key(){
+check_public_key() {
   if [ ! -d "$PUBLIC_KEY" ]; then
     _error "Public key not found at $PUBLIC_KEY"
     exit 0
   fi
 }
 
-_az(){
+_az() {
   local command=$@
   az $command
 }
 
-check_inputs(){
-    GITLAB_URL="https://$GITLAB_DOMAIN/"
-    _debug_line_break
-    _debug "      Subscription Id : $__SUBSCRIPTION_ID__"
-    _debug "           Config Path: $CONFIG_PATH"
-    _debug "         Gitlab Token : $GITLAB_TOKEN"
-    _debug "           Gitlab Url : $GITLAB_URL"
-    _debug "       Resource Group : $RESOURCE_GROUP"
-    _debug "            Cert Path : $CERT_PATH"
-    _debug "                Debug : $DEBUG_FLAG"
-    _debug "            VM Prefix : $VM_PREFIX"
-    _debug "            Full Mode : $MODE_FULL"
-    _debug "         GitLab Token : $GITLAB_TOKEN"
-    _debug "        GitLab Domain : $GITLAB_DOMAIN"
-    _debug "           Gitlab Url : $GITLAB_URL"
-    _debug "    Server Private IP : $SERVER_INTERNAL_IP"
-    _debug "                Debug : $DEBUG_FLAG"
-    _debug_line_break
+check_inputs() {
+  GITLAB_URL="https://$GITLAB_DOMAIN/"
+  _debug_line_break
+  _debug "      Subscription Id : $__SUBSCRIPTION_ID__"
+  _debug "           Config Path: $CONFIG_PATH"
+  _debug "         Gitlab Token : $GITLAB_TOKEN"
+  _debug "           Gitlab Url : $GITLAB_URL"
+  _debug "       Resource Group : $RESOURCE_GROUP"
+  _debug "            Cert Path : $CERT_PATH"
+  _debug "                Debug : $DEBUG_FLAG"
+  _debug "            VM Prefix : $VM_PREFIX"
+  _debug "            Full Mode : $MODE_FULL"
+  _debug "         GitLab Token : $GITLAB_TOKEN"
+  _debug "        GitLab Domain : $GITLAB_DOMAIN"
+  _debug "           Gitlab Url : $GITLAB_URL"
+  _debug "    Server Private IP : $SERVER_INTERNAL_IP"
+  _debug "      CAF Environment : $ENVIRONMENT"
+  _debug "                Debug : $DEBUG_FLAG"
+  _debug_line_break
 
-
-
-    if [ -z "$RESOURCE_GROUP" ]; then
-        _error "Resource Group is required!"
-        usage
-    fi
-
+  if [ -z "$RESOURCE_GROUP" ]; then
+    _error "Resource Group is required!"
+    usage
+  fi
 
 }
 
 usage() {
-    local azStatusMessage
-    if [ -x "$(command -v az)" ]; then
-        azStatusMessage=$(_success "installed - you're good to go!")
-    else
-        azStatusMessage=$(_error "not installed")
-    fi
+  local azStatusMessage
+  if [ -x "$(command -v az)" ]; then
+    azStatusMessage=$(_success "installed - you're good to go!")
+  else
+    azStatusMessage=$(_error "not installed")
+  fi
 
-    _helpText=" Usage: $me
+  _helpText=" Usage: $me
   -d | --debug                          Turn debug logging on.
 
    dependencies:
    -az $azStatusMessage"
-    _information "$_helpText" 1>&2
-    exit 1
+  _information "$_helpText" 1>&2
+  exit 1
 }
 
 main
