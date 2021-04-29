@@ -1,0 +1,152 @@
+variables:
+  environment: 'demo'
+  application: 'argocd'
+  landingzone_key : 'cluster_aks'
+  cluster_key: 'cluster_re1'
+  base_uri: ''
+
+#####################################################################
+# Platform Deployment
+#####################################################################
+
+# Launchpad deployment done manually. See notes below.
+
+# Add MSI configs to Group CICD variables for yml.
+#   ARM_USE_MSI = true
+#   MSI_ID_0#   = MSI Client ID
+
+stages:
+  - foundations
+  - shared_services
+  - networking
+  - aks
+  - data_analytics
+  - argocd
+
+foundations:
+  stage: foundations
+  tags:
+    - gitlab-runner-1
+  script:
+    - |
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/base_config.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_public.git
+
+      az login --identity --username ${MSI_ID_01}
+
+      /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_public/landingzones/caf_foundations \
+      -var-folder ${CI_PROJECT_DIR}/base_config/level1 \
+      -parallelism 30 \
+      -level level1 \
+      -env demo \
+      -a apply
+
+
+shared_services:
+  stage: shared_services
+  tags:
+    - gitlab-runner-2
+  script:
+    - |
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/base_config.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_public.git
+
+      az login --identity --username ${MSI_ID_02}
+
+      /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_public/landingzones/caf_shared_services \
+      -tfstate caf_shared_services.tfstate \
+      -var-folder ${CI_PROJECT_DIR}/base_config/level2/shared_services \
+      -parallelism 30 \
+      -level level2 \
+      -env demo \
+      -a apply
+
+
+networking:
+  stage: networking
+  tags:
+    - gitlab-runner-2
+  script:
+    - |
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/base_config.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_public.git
+
+      az login --identity --username ${MSI_ID_02}
+
+      /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_public/landingzones/caf_networking \
+      -tfstate networking_hub.tfstate \
+      -var-folder ${CI_PROJECT_DIR}/base_config/level2/networking/hub \
+      -parallelism 30 \
+      -level level2 \
+      -env demo \
+      -a apply
+
+
+#####################################################################
+# APP Deployment
+#####################################################################
+
+aks:
+  stage: aks
+  tags:
+    - gitlab-runner-3
+  script:
+    - |
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/app_config_aks.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_app.git
+
+      az login --identity --username ${MSI_ID_03}
+
+      /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_app/landingzones/caf_solutions \
+      -tfstate landing_zone_aks.tfstate \
+      -var-folder ${CI_PROJECT_DIR}/app_config_aks/level3 \
+      -parallelism 30 \
+      -level level3 \
+      -env demo \
+      -a apply
+
+argocd:
+  stage: argocd
+  tags:
+    - gitlab-runner-4
+  script:
+    - |
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/app_config_argocd.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_app.git
+
+      az login --identity --username ${MSI_ID_04}
+
+      /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_app/landingzones/caf_solutions/add-ons/aks_applications \
+      -tfstate ${application}1.tfstate \
+      -var-folder ${CI_PROJECT_DIR}/app_config_argocd/level4/argocd \
+      -var tags={application=\"${application}\"} \
+      -level level4 \
+      -env demo \
+      -a apply
+
+
+
+# Currently done manually since Owner role in the Azure Subscription is needed for depoyment.
+# stages:
+#   - launchpad
+
+# launchpad:
+#   stage: launchpad
+#   tags:
+#     - rover
+#   script:
+#     - |
+#       env
+
+#       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/base_config.git
+#       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_public.git
+
+#       az login --identity --username ${MSI_ID}
+
+#       /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_public/landingzones/caf_launchpad \
+#         -launchpad \
+#         -var-folder ${CI_PROJECT_DIR}/base_config/level0/launchpad \
+#         -parallelism 30 \
+#         -level level0 \
+#         -env demo \
+#         -a apply
