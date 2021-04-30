@@ -5,7 +5,8 @@ WIP:
 
 -> runner setup
 
-clone_repos branch
+WIP: use the following branch for now
+* https://github.com/aztfmod/symphony/tree/davesee/bump_versions
 
 go to /scripts/utils
 /clone-repos.sh
