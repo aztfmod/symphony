@@ -31,7 +31,7 @@ TIPS:
 
 For Option A (remote to remote), run the following command at the following location:
 
-```
+```bash
 cd scripts/utils/
 
 ./clone-repos.sh 
@@ -53,7 +53,7 @@ The parameters are defined as follows:
 
 For Option B (local to remote), run the following command at the following location:
 
-```
+```bash
 cd scripts/utils/
 
 ./clone-repos.sh 
@@ -81,7 +81,7 @@ TIPS:
 * Get the latest version of the Azure CLI if necessary
 * Run the following commands before running rover
 
-```
+```bash
 alias rover=/tf/rover/rover.sh
 export ROVER_RUNNER=true
 rover login
@@ -89,7 +89,7 @@ rover login
 
 To deploy the launchpad now, run the following command at the following location:
 
-```
+```bash
 rover 
 -lz /workspaces/symphony/caf/caf_modules_public/landingzones/caf_launchpad 
 -launchpad 
@@ -127,7 +127,7 @@ Before you can set up the GitLab runners, you must obtain the parammeter values 
 
 Next, update ```install.sh``` in ```/scripts/utils``` with values obtained from the .json file.
 
-```
+```bash
 declare RESOURCE_GROUP="<resource-group>"
 declare GITLAB_TOKEN="<gitlab token>"
 declare GITLAB_URL="<server-fqdn>"
@@ -177,20 +177,17 @@ NOTE: The -f flag will invoke the creation of 5 VMs (instead of 1 VM), with 5 ru
 
 TIP: Before you trigger the pipelines, verify that the ```.gitlab-ci.yml``` file in the following location has the base URI set to the GitLab server name.
 
-File: /caf/caf_orchestrator/.gitlab-ci.yml
-```
+File: ```/caf/caf_orchestrator/.gitlab-ci.yml```
+```YAML
 variables:
-  environment: 'demo'
-  application: 'argocd'
-  landingzone_key : 'cluster_aks'
-  cluster_key: 'cluster_re1'
+...
   base_uri: '<gitlab-server>'
 ```
 
-TIP: In case the pipeline run generates a server access error, run the following command after you SSH into the server.
+TIP: In case the pipeline run generates a server access error while trying to reach an inaccessible IP Address, update the value for ```external_url``` in ```gitlab.rb``` on the server.
 
 
-```
+```bash
 ssh gitlab@servername.com
 
 cd /etc/gitlab/
@@ -200,27 +197,27 @@ sudo chmod +x gitlab.rb
 
 Edit the file ```gitlab.rb``` using any editor, e.g. VIM
 
-```
+```bash
 vim gitlab.rb
 ```
 
 In the file gitlab.rb, set external_url to the FQDN of your Gitlab server:
 
-```
+```ruby
 external_url '<gitlab-server>'
 ```
 
 Exit the file and save changes, 
 e.g.
 
-```
+```bash
 <Esc>
 :wq
 ```
 
 Restart your Gitlab server with new configuration
 
-```
+```bash
 sudo gitlab-ctl reconfigure
 ```
 
