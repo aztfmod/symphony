@@ -1,8 +1,3 @@
-provider_azurerm_features_keyvault = {
-  purge_soft_delete_on_destroy = true
-}
-
-
 keyvaults = {
   level0 = {
     name                = "level0"

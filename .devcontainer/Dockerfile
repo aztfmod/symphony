@@ -1,4 +1,4 @@
-FROM aztfmod/rover:0.13.6-2103.0304
+FROM aztfmod/rover:0.13.6-2104.1611
 
 RUN sudo apt-get update \
     && sudo apt-get install -y wget jq nano

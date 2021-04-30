@@ -9,7 +9,7 @@ aks_clusters = {
       type = "SystemAssigned"
     }
 
-    kubernetes_version = "1.19.6"
+    kubernetes_version = "1.19.7"
     vnet_key           = "spoke_aks_re1"
 
     network_policy = {
@@ -35,7 +35,7 @@ aks_clusters = {
 
     default_node_pool = {
       name                  = "sharedsvc"
-      vm_size               = "Standard_F4s_v2"
+      vm_size               = "Standard_F2s_v2"
       subnet_key            = "aks_nodepool_system"
       enabled_auto_scaling  = false
       enable_node_public_ip = false

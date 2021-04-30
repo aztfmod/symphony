@@ -26,11 +26,11 @@ stages:
 foundations:
   stage: foundations
   tags:
-    - rover
+    - gitlab-runner-1
   script:
     - |
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/base_config.git
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_public.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/base_config.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_public.git
 
       az login --identity --username ${MSI_ID_01}
 
@@ -45,11 +45,11 @@ foundations:
 shared_services:
   stage: shared_services
   tags:
-    - rover
+    - gitlab-runner-2
   script:
     - |
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/base_config.git
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_public.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/base_config.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_public.git
 
       az login --identity --username ${MSI_ID_02}
 
@@ -65,11 +65,11 @@ shared_services:
 networking:
   stage: networking
   tags:
-    - rover
+    - gitlab-runner-2
   script:
     - |
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/base_config.git
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_public.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/base_config.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_public.git
 
       az login --identity --username ${MSI_ID_02}
 
@@ -89,11 +89,11 @@ networking:
 aks:
   stage: aks
   tags:
-    - rover
+    - gitlab-runner-3
   script:
     - |
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/app_config_aks.git
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_app.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/app_config_aks.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_app.git
 
       az login --identity --username ${MSI_ID_03}
 
@@ -108,11 +108,11 @@ aks:
 argocd:
   stage: argocd
   tags:
-    - rover
+    - gitlab-runner-4
   script:
     - |
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/app_config_argocd.git
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_app.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/app_config_argocd.git
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_app.git
 
       az login --identity --username ${MSI_ID_04}
 
@@ -138,8 +138,8 @@ argocd:
 #     - |
 #       env
 
-#       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/base_config.git
-#       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/reference_app_caf/caf_modules_public.git
+#       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/base_config.git
+#       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_public.git
 
 #       az login --identity --username ${MSI_ID}
 

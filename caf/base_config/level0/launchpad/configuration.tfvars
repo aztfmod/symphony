@@ -13,9 +13,11 @@ default_region = "region1"
 #
 # passthrough means the default CAF naming convention is not applied and you are responsible
 # of the unicity of the names you are giving. the CAF provider will clear out
-# passthrough = false
+passthrough = false
 # adds random chars at the end of the names produced by the provider
-# random_length = 3
+random_length = 3
+# optional chars at the start of the names produced by the provider
+prefix = ""
 
 # Inherit_tags defines if a resource will inherit it's resource group tags
 inherit_tags = true
