@@ -97,7 +97,7 @@ verify params from .json file created in server setup
 e.g.
 ```
 declare RESOURCE_GROUP="gitlab-testsc-rg"
-declare GITLAB_TOKEN="63kfPMczhV328d7xo6Ms"
+declare GITLAB_TOKEN="<your gitlab token>"
 declare GITLAB_URL="my-gitlab-serversc.eastus.cloudapp.azure.com"
 declare CERT_PATH=/workspaces/symphony/.data/ssl/server.crt
 declare SERVER_INTERNAL_IP="10.0.0.4"
