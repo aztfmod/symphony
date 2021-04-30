@@ -2,13 +2,17 @@
 
 This document outlines the steps necessary to set up a sample CAF (Cloud Adoption Framework) application in GitLab. 
 
-To summarize:
+Before you begin:
 
-0. Clone the [symphony](https://github.com/aztfmod/symphon) repo.
-  - For now use the following branch: [/davesee/bump_versions](https://github.com/aztfmod/symphony/tree/davesee/bump_versions)
+0. Clone the [symphony](https://github.com/aztfmod/symphony) repo.
+1. Ensure that Docker is up and running on your local machine.
+2. Launch the Dev Container provided with the project.
+
+To summarize the steps:
+
 1. Set up the GitLab server with ```gitlab-server-setup.sh```
-2. Set up SSH Keys and clone repostories using ```clone-repos.sh```
-3. Deploy the launchpad landing zone manually to set up MSIs, using ```rover```
+2. Deploy the launchpad landing zone manually to set up MSIs, using ```rover```
+3. Set up SSH Keys and clone repostories using ```clone-repos.sh```
 4. Set up the Gitlab runners with ```install.sh```
 5. Run pipelines in Gitlab and troubleshoot as necessary
 
@@ -18,7 +22,42 @@ Set up the GitLab server using the instructions provided at the following locati
 
 * <a href="../../scripts/gitlab-server/README.md">/scripts/gitlab-server/README.md</a>
 
-# 2. Clone Repositories
+# 2. Launchpad Deployment
+
+To deploy the launchpad and create the necessary MSIs, 
+
+TIPS:
+* Get the latest version of the Azure CLI if necessary
+* Run the following commands before running rover
+
+```bash
+alias rover=/tf/rover/rover.sh
+export ROVER_RUNNER=true
+rover login
+```
+
+To deploy the launchpad now, run the following command at the following location:
+
+```bash
+rover 
+-lz /workspaces/symphony/caf/caf_modules_public/landingzones/caf_launchpad 
+-launchpad 
+-var-folder /workspaces/symphony/caf/base_config/level0/launchpad 
+-level level0 
+-env demo 
+-a apply 
+```
+
+The launchpad should now be created with proper MSI setup for each level. 
+
+Tips:
+* You may verify the launchpad resource group in your Azure subscription, e.g. rg-launchpad-security-yog. 
+* Specifically, check for the managed identity for level 2, e.g. msi-runner-level-2-dlm. 
+* Check for the assigned tags, e.g. environment = demo and level = level2
+
+FYI, the level tag is checked when runners are created
+
+# 3. Clone Repositories
 
 There are 2 options to clone the necessary repositories into the target location:
 * Option A (remote to remote): this requires Personal Access Tokens (PATs) for both the source and target repositories
@@ -73,40 +112,6 @@ The parameters are defined as follows:
 * d = debug flag
 * o = overwrite target repo
 
-# 3. Launchpad Deployment
-
-To deploy the launchpad and create the necessary MSIs, 
-
-TIPS:
-* Get the latest version of the Azure CLI if necessary
-* Run the following commands before running rover
-
-```bash
-alias rover=/tf/rover/rover.sh
-export ROVER_RUNNER=true
-rover login
-```
-
-To deploy the launchpad now, run the following command at the following location:
-
-```bash
-rover 
--lz /workspaces/symphony/caf/caf_modules_public/landingzones/caf_launchpad 
--launchpad 
--var-folder /workspaces/symphony/caf/base_config/level0/launchpad 
--level level0 
--env demo 
--a apply 
-```
-
-The launchpad should now be created with proper MSI setup for each level. 
-
-Tips:
-* You may verify the launchpad resource group in your Azure subscription, e.g. rg-launchpad-security-yog. 
-* Specifically, check for the managed identity for level 2, e.g. msi-runner-level-2-dlm. 
-* Check for the assigned tags, e.g. environment = demo and level = level2
-
-FYI, the level tag is checked when runners are created
 
 # 4. Runner Setup
 
@@ -170,7 +175,7 @@ This should invoke ```gitlab-runner-setup.sh```, which has the following paramet
     -f                                          # (OPTIONAL) full mode (5 VMs instead of 1)
 ```
 
-NOTE: The -f flag will invoke the creation of 5 VMs (instead of 1 VM), with 5 runners each. For a quick test, it is easier to leave out the -f parameter for faster results. 5 VMs are configured in full mode to allow one pool of runners per CAF layers 0 to 4.
+NOTE: The -f flag will invoke the creation of 4 VMs (instead of 1 VM), with 5 runners each. For a quick test, it is easier to leave out the -f parameter for faster results. 5 VMs are configured in full mode to allow one pool of runners per CAF layers 0 to 4.
 
 
 # 5. Pipelines
