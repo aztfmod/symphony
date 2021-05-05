@@ -1,4 +1,4 @@
-# Debugging CAF Applications
+# Debugging CAF Deployments
 
 This document will outlines steps that you can use to debug a CAF deployment.
 
