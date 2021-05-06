@@ -10,10 +10,10 @@ One noticable difference between this folder structure and the starter repo is t
 
 - Config Launchpad
   - Level 0 only
-  - Teffaform State management storage containers and keyvauls
+  - Terraform State management storage containers and keyvaults
   - MSIs for Gitlab runner agents to deploy subsequent levels (moving to an CAF runner add-on eventually)
   - Deployed from the devcontainer rover cli via logged in Owner of target subscription
-    - Deploy command available in [local.sh](./local.sh)sx
+    - Deploy command available in [local.sh](./local.sh)
 
 - Config Platform
   - Levels 1, 2 and 3
@@ -35,4 +35,4 @@ One noticable difference between this folder structure and the starter repo is t
     - Use relative path from landing zone source = "../../modules" and no version specification
 
 ## Copy to GitLab
-Please use the [clone-repos.sh](../scripts/utils/README.md) script to copy all the folders in this path to GitLab as inddividual repos under a parent Group. This will also add the environmnet variables to the Group to allow proper pipeline and MSI execution.
+Please use the [clone-repos.sh](../scripts/utils/README.md) script to copy all the folders in this path to GitLab as individual repos under a parent Group. This will also add the environmnet variables to the Group to allow proper pipeline and MSI execution.
