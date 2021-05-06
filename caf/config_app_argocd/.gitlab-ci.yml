@@ -38,9 +38,11 @@ argocd:
     - gitlab-runner-4
   script:
     - |
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_argocd.git
+
       az login --identity --username ${MSI_ID_04}
 
-      /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/custom_modules/landingzones/aks_applications \
+      /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules_argocd/landingzones/aks_applications \
       -tfstate ${application}1.tfstate \
       -var-folder ${CI_PROJECT_DIR}/level4/argocd \
       -var tags={application=\"${application}\"} \
