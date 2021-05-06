@@ -1,0 +1,45 @@
+#####################################################################
+# Launchpad Deployment
+#####################################################################
+
+# Done manually since Owner role in the Azure Subscription is needed.
+# Creates MSIs with permission for GitLab runners.
+
+################### Rover manual implementation  ###################
+
+# rover -lz /workspaces/symphony/caf/caf_modules/landingzones/caf_launchpad \
+#   -launchpad \
+#   -var-folder /workspaces/symphony/caf/config_launchpad/level0/launchpad \
+#   -parallelism 30 \
+#   -level level0 \
+#   -env demo \
+#   -a apply
+
+################### Pipeline implementation ###################
+# variables:
+#   environment: 'demo'
+#   action: 'apply'
+#   base_uri: 'my-gitlab-server.eastus2.cloudapp.azure.com'
+
+# stages:
+#   - launchpad
+
+# launchpad:
+#   stage: launchpad
+#   tags:
+#     - gitlab-runner-0
+#   script:
+#     - |
+#       env
+#       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/config_launchpad.git
+#       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules.git
+
+#       az login --identity --username ${MSI_ID_01}
+
+#       /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules/landingzones/caf_launchpad \
+#         -launchpad \
+#         -var-folder ${CI_PROJECT_DIR}/config_launchpad/level0/launchpad \
+#         -parallelism 30 \
+#         -level level0 \
+#         -env ${environment} \
+#         -a ${action}
