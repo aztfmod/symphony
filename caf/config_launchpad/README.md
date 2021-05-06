@@ -1,3 +1,3 @@
-# base_config
+# Launchpad resources and services
 
-Levels 0, 1, & 2
+Level 0

@@ -1,3 +1,3 @@
-# base_config
+# Platform resources and services
 
-Levels 0, 1, & 2
+Levels 1, 2 & 3
