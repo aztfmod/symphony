@@ -1,5 +1,5 @@
 export CAF_DIR=$(pwd)
-export caf_environment=local-test
+export caf_environment=demo
 
 rover -lz $CAF_DIR/caf_modules/landingzones/caf_launchpad \
   -launchpad \
