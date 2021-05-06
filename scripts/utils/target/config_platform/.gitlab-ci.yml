@@ -1,0 +1,69 @@
+variables:
+  environment: 'demo'
+  action: 'apply'
+  base_uri: 'my-gitlab-server.eastus2.cloudapp.azure.com'
+
+#####################################################################
+# Platform Deployment
+#####################################################################
+
+stages:
+  - foundations
+  - shared_services
+  - networking
+
+foundations:
+  stage: foundations
+  tags:
+    - gitlab-runner-1
+  script:
+    - |
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules.git
+
+      az login --identity --username ${MSI_ID_01}
+
+      /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules/landingzones/caf_solution \
+      -tfstate caf_foundations.tfstate \
+      -var-folder ${CI_PROJECT_DIR}/level1/foundations \
+      -parallelism 30 \
+      -level level1 \
+      -env ${environment} \
+      -a ${action}
+
+
+shared_services:
+  stage: shared_services
+  tags:
+    - gitlab-runner-2
+  script:
+    - |
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules.git
+
+      az login --identity --username ${MSI_ID_02}
+
+      /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules/landingzones/caf_solution \
+      -tfstate caf_shared_services.tfstate \
+      -var-folder ${CI_PROJECT_DIR}/level2/shared_services \
+      -parallelism 30 \
+      -level level2 \
+      -env ${environment} \
+      -a ${action}
+
+
+networking:
+  stage: networking
+  tags:
+    - gitlab-runner-2
+  script:
+    - |
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules.git
+
+      az login --identity --username ${MSI_ID_02}
+
+      /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules/landingzones/caf_solution \
+      -tfstate networking_hub.tfstate \
+      -var-folder ${CI_PROJECT_DIR}/level2/networking/hub \
+      -parallelism 30 \
+      -level level2 \
+      -env ${environment} \
+      -a ${action}
