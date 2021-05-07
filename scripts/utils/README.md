@@ -6,6 +6,8 @@ This script is used to facilitate the creation of Gitlab group/repos in the targ
 - An existing GitLab instance, or
 - A local folder
 
+In addition to the PAT, please ensure you have added a SSH key to the GitLab instances you are working with to be able to access the repositories.
+
 ``` bash
 # GitLab group w/repos to GitLab clone
 ./clone-repos.sh
@@ -22,7 +24,6 @@ This script is used to facilitate the creation of Gitlab group/repos in the targ
   -e <environment> \
   -d  -o
 ```
-In addition to the PAT, please ensure you have added a SSH key to the GitLab instances you are working with to be able to access the repositories.
 
 ## Remove resources
 
