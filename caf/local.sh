@@ -41,9 +41,9 @@ rover -lz $CAF_DIR/caf_modules/landingzones/caf_solution \
   -env ${caf_environment} \
   -a apply
 
-rover -lz $CAF_DIR/app_argocd/custom_modules/landingzones/aks_applications \
+rover -lz $CAF_DIR/caf_modules_argocd/landingzones/aks_applications \
   -tfstate argocd1.tfstate \
-  -var-folder $CAF_DIR/app_argocd/level4/argocd \
+  -var-folder $CAF_DIR/config_app_argocd/level4/argocd \
   -var tags={application=\"${argocd}\"} \
   -level level4 \
   -env ${caf_environment} \
