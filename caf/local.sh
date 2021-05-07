@@ -1,5 +1,10 @@
+# Run each command manually and in order to deploy the relevant level/component
+# Launchpad deployment only necessary when using Gitlab Pipelines for Platform and App deployments
+
 export CAF_DIR=$(pwd)
 export caf_environment=demo
+
+# Local launchpad deployment
 
 rover -lz $CAF_DIR/caf_modules/landingzones/caf_launchpad \
   -launchpad \
@@ -8,6 +13,8 @@ rover -lz $CAF_DIR/caf_modules/landingzones/caf_launchpad \
   -level level0 \
   -env ${caf_environment} \
   -a apply
+
+# Local platform deployments
 
 rover -lz $CAF_DIR/caf_modules/landingzones/caf_solution \
   -tfstate caf_foundations.tfstate \
@@ -32,6 +39,8 @@ rover -lz $CAF_DIR/caf_modules/landingzones/caf_solution \
   -level level2 \
   -env ${caf_environment} \
   -a apply
+
+# Local app deployments
 
 rover -lz $CAF_DIR/caf_modules/landingzones/caf_solution \
   -tfstate landing_zone_aks.tfstate \
