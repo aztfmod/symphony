@@ -33,6 +33,13 @@ shArgs.arg "DEBUG_FLAG" -d --debug FLAG true
 
 shArgs.parse $@
 
+function finish {
+  # Clean up temp folders
+  cd /workspaces/symphony/scripts/utils
+  rm -rf target source temp
+}
+trap finish EXIT
+
 function main() {
   check_inputs
 
