@@ -37,24 +37,24 @@ shArgs.parse $@
 function main() {
   check_inputs
 
-  # # Get source code
-  # if [ ! -z "$SOURCE_LOCAL_PATH" ]; then
-  #   getLocalSource "source" $SOURCE_LOCAL_PATH
-  # elif [ ! -z "$SOURCE_PAT" ] && [ ! -z "$SOURCE_PAT" ]; then
-  #   cloneRepos "source" $SOURCE_FQDN $SOURCE_PAT
-  # fi
+  # Get source code
+  if [ ! -z "$SOURCE_LOCAL_PATH" ]; then
+    getLocalSource "source" $SOURCE_LOCAL_PATH
+  elif [ ! -z "$SOURCE_PAT" ] && [ ! -z "$SOURCE_PAT" ]; then
+    cloneRepos "source" $SOURCE_FQDN $SOURCE_PAT
+  fi
 
-  # # Get or create target Gitlab group and projects
-  # confirmOrCreateTargetRepos
+  # Get or create target Gitlab group and projects
+  confirmOrCreateTargetRepos
 
-  # # Download target repos
-  # cloneRepos "target" $TARGET_FQDN $TARGET_PAT
+  # Download target repos
+  cloneRepos "target" $TARGET_FQDN $TARGET_PAT
 
-  # # Copy source code to target folder while maintaining git folders
-  # copySourceCodeToTarget "source" "target"
+  # Copy source code to target folder while maintaining git folders
+  copySourceCodeToTarget "source" "target"
 
-  # # Update target FQDNs in code
-  # updateFQDN "target"
+  # Update target FQDNs in code
+  updateFQDN "target"
 
   # Push target code to Gitlab repo
   pushRepos "target"
