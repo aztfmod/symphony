@@ -53,8 +53,8 @@ function main() {
   # Copy source code to target folder while maintaining git folders
   copySourceCodeToTarget "source" "target"
 
-  # Update target FQDNs in code
-  updateFQDN "target"
+  # Update target FQDNs in code (replaced with GitLab CI vars)
+  # updateFQDN "target"
 
   # Push target code to Gitlab repo
   pushRepos "target"
