@@ -4,7 +4,7 @@ variables:
   application: 'argocd'
   landingzone_key : 'cluster_aks'
   cluster_key: 'cluster_re1'
-  base_uri: ''
+  group_url: 'https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_NAMESPACE}'
 
 #####################################################################
 # APP Deployment
@@ -20,7 +20,7 @@ aks:
     - gitlab-runner-3
   script:
     - |
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules.git
+      git clone ${group_url}/caf_modules.git
 
       az login --identity --username ${MSI_ID_03}
 
@@ -34,11 +34,11 @@ aks:
 
 argocd:
   stage: argocd
-  tags:
+  tags:D
     - gitlab-runner-4
   script:
     - |
-      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules_argocd.git
+      git clone ${group_url}/caf_modules_argocd.git
 
       az login --identity --username ${MSI_ID_04}
 

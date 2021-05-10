@@ -19,7 +19,7 @@
 # variables:
 #   environment: 'demo'
 #   action: 'apply'
-#   base_uri: ''
+#   group_url: 'https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_NAMESPACE}'
 
 # stages:
 #   - launchpad
@@ -31,14 +31,13 @@
 #   script:
 #     - |
 #       env
-#       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/config_launchpad.git
-#       git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@${base_uri}/${CI_PROJECT_NAMESPACE}/caf_modules.git
+#       git clone ${group_url}/af_modules.git
 
 #       az login --identity --username ${MSI_ID_01}
 
 #       /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules/landingzones/caf_launchpad \
 #         -launchpad \
-#         -var-folder ${CI_PROJECT_DIR}/config_launchpad/level0/launchpad \
+#         -var-folder ${CI_PROJECT_DIR}/level0/launchpad \
 #         -parallelism 30 \
 #         -level level0 \
 #         -env ${environment} \
