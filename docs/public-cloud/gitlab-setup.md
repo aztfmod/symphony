@@ -1,6 +1,6 @@
 # Gitlab Setup Guide for CAF Sample App
 
-This document outlines the steps necessary to set up a sample CAF (Cloud Adoption Framework) application in GitLab. 
+This document outlines the steps necessary to set up a sample CAF (Cloud Adoption Framework) application in GitLab.
 
 Before you begin:
 
@@ -24,7 +24,7 @@ Set up the GitLab server using the instructions provided at the following locati
 
 # 2. Launchpad Deployment
 
-To deploy the launchpad and create the necessary MSIs, 
+To deploy the launchpad and create the necessary MSIs,
 
 TIPS:
 * Get the latest version of the Azure CLI if necessary
@@ -39,20 +39,20 @@ rover login
 To deploy the launchpad now, run the following command at the following location:
 
 ```bash
-rover 
--lz /workspaces/symphony/caf/caf_modules_public/landingzones/caf_launchpad 
--launchpad 
--var-folder /workspaces/symphony/caf/base_config/level0/launchpad 
--level level0 
--env demo 
--a apply 
+rover \
+-lz /workspaces/symphony/caf/caf_modules/landingzones/caf_launchpad \
+-launchpad \
+-var-folder /workspaces/symphony/caf/config_launchpad/level0/launchpad \
+-level level0 \
+-env demo \
+-a apply
 ```
 
-The launchpad should now be created with proper MSI setup for each level. 
+The launchpad should now be created with proper MSI setup for each level.
 
 Tips:
-* You may verify the launchpad resource group in your Azure subscription, e.g. rg-launchpad-security-yog. 
-* Specifically, check for the managed identity for level 2, e.g. msi-runner-level-2-dlm. 
+* You may verify the launchpad resource group in your Azure subscription, e.g. rg-launchpad-security-yog.
+* Specifically, check for the managed identity for level 2, e.g. msi-runner-level-2-dlm.
 * Check for the assigned tags, e.g. environment = demo and level = level2
 
 FYI, the level tag is checked when runners are created
@@ -63,21 +63,22 @@ There are 2 options to clone the necessary repositories into the target location
 * Option A (remote to remote): this requires Personal Access Tokens (PATs) for both the source and target repositories
 * Option B (local to remote): this requires a PAT only for the target repository
 
-TIPS: 
+TIPS:
 - Create your Personal Access Token (PAT) on each GitLab location (source and/or target) and make a note of them.
 - Set up SSH Keys as needed.
 - Use Option B to get the latest current version of the repositories.
+- Use ```az login``` to ensure that you are logged in to the Azure CLI
 
 For Option A (remote to remote), run the following command at the following location:
 
 ```bash
 cd scripts/utils/
 
-./clone-repos.sh 
--g reference_app_caf 
--sp <source-pat> 
--sd <source-fqdn> 
--tp <target-pat> 
+./clone-repos.sh
+-g reference_app_caf
+-sp <source-pat>
+-sd <source-fqdn>
+-tp <target-pat>
 -td <target-fqdn>
 -e <launchpad-environment>
 ```
@@ -95,8 +96,8 @@ For Option B (local to remote), run the following command at the following locat
 ```bash
 cd scripts/utils/
 
-./clone-repos.sh 
--s /workspaces/symphony/caf 
+./clone-repos.sh
+-s /workspaces/symphony/caf
 -tp <target-pat>
 -td <target-fqdn>
 -e <launchpad-environment>
@@ -163,7 +164,7 @@ This should invoke ```gitlab-runner-setup.sh```, which has the following paramet
     -gt <gitlab-token> \
     -gd <gitlab-url> \
     -si <server-private-ip> \
-    -f 
+    -f
 
 # Parameter specifications
     -g gitlab-test-rg \                         # Deployment resource group name (required)
@@ -180,10 +181,12 @@ NOTE: The -f flag will invoke the creation of 4 VMs (instead of 1 VM), with 5 ru
 
 # 5. Pipelines
 
-TIP: Before you trigger the pipelines, verify that the ```.gitlab-ci.yml``` file in the following location has the base URI set to the GitLab server name.
+TIP: Before you trigger the pipelines, verify that the ```.gitlab-ci.yml``` file has the base URI set to the GitLab server name, in all the relevant pipelines. As of this writing, there are 2 separate pipelines to check: config_platform and config_app_argocd.
 
-File: ```/caf/caf_orchestrator/.gitlab-ci.yml```
-```YAML
+File: ```/caf/config_platform/.gitlab-ci.yml```
+File: ```/caf/config_app_argocd/.gitlab-ci.yml```
+
+```YAML Sample
 variables:
 ...
   base_uri: '<gitlab-server>'
@@ -191,6 +194,15 @@ variables:
 
 TIP: In case the pipeline run generates a server access error while trying to reach an inaccessible IP Address, update the value for ```external_url``` in ```gitlab.rb``` on the server.
 
+TIP: Before you can ssh into the Gitlab server, you may have to update the Gitlab server password with your SSH Public Key.
+
+1. Copy your local SSH public key.
+2. In the Azure portal, locate your Gitlab server VM.
+3. Under the left panel of the VM, locate "Reset Password" under "Support + troubleshooting".
+4. For the Mode, selected "Reset SSH public key".
+5. For username, enter "gitlab".
+6. For the SSH public key, paste the SSH public key you copied from your local system.
+e.g. ssh-rsa ABCXYZ...
 
 ```bash
 ssh gitlab@servername.com
@@ -212,7 +224,7 @@ In the file gitlab.rb, set external_url to the FQDN of your Gitlab server:
 external_url '<gitlab-server>'
 ```
 
-Exit the file and save changes, 
+Exit the file and save changes,
 e.g.
 
 ```bash
@@ -228,3 +240,26 @@ sudo gitlab-ctl reconfigure
 
 Run the pipelines in the GitLab web UI, and troubleshoot any errors as necessary.
 
+To run the first pipeline:
+
+1. Navigate to your GitLab server in a web browser.
+2. Go to the list of Groups.
+3. Open the group of projects that were created during the clone operation.
+4. Open the config_platform project
+5. Browse the Pipelines under CI/CD
+6. Click the green Run Pipeline button to run the pipeline for the master branch.
+7. Observe that the pipeline should run for Foundations, Shared Services and Networking.
+8. Troubleshoot any issues and retry if necessary.
+
+<img src="assets/pipeline-01.png" />
+
+To run the second pipeline:
+
+1. Open the config_app_argocd project
+2. Browse the Pipelines under CI/CD
+3. Click the green Run Pipeline button to run the pipeline for the master branch.
+4. Observe that the pipeline should run for Foundations, Shared Services and Networking.
+5. Troubleshoot any issues and retry if necessary.
+
+
+<img src="assets/pipeline-02.png" />
