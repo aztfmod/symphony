@@ -85,7 +85,7 @@ export_arm_subscription_id() {
 }
 
 find_and_export_prefix () {
-  rgName=$(az group list --query "[?tags.environment=='demo' && tags.landingzone].{Name:name}" | jq -r "first(.[].Name)")
+  rgName=$(az group list --query "[?tags.environment=='$ENVIRONMENT' && tags.landingzone].{Name:name}" | jq -r "first(.[].Name)")
 
   prefix=${rgName%-rg-launchpad*}
 

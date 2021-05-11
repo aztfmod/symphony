@@ -12,6 +12,7 @@ declare LAUNCHPAD_ENV=""
 
 declare DEBUG_FLAG=false
 declare me=$(basename "$0")
+declare TARGET_GROUP_ID=0
 
 # includes
 source ../lib/shell_logger.sh
@@ -52,8 +53,8 @@ function main() {
   # Copy source code to target folder while maintaining git folders
   copySourceCodeToTarget "source" "target"
 
-  # Update target FQDNs in code
-  updateFQDN "target"
+  # Update target FQDNs in code (replaced with GitLab CI vars)
+  # updateFQDN "target"
 
   # Push target code to Gitlab repo
   pushRepos "target"
@@ -79,6 +80,13 @@ function cloneRepos() {
   for repo in $(curl -sk --header "PRIVATE-TOKEN: $pat" https://$fqdn/api/v4/groups/$groupId | jq ".projects[].ssh_url_to_repo" | tr -d '"'); do
     _debug "Cloning $repo"
     git clone $repo
+    if [ $? != 0 ]; then
+      if [ $TARGET_GROUP_ID != 0 ] && [ $path == "target" ]; then
+        _debug "Cleanup empty target group."
+        deleteGroup=$(curl -sk --request DELETE --header "PRIVATE-TOKEN: $TARGET_PAT" "https://$fqdn/api/v4/groups/$TARGET_GROUP_ID")
+      fi
+      error ${LINENO} "Clone $path repo, GitLab SSH not added to your user profile" 128
+    fi
   done
   cd ../
 }
@@ -111,6 +119,7 @@ function confirmOrCreateTargetRepos() {
     _information "Target group not found, creating target group and repos."
     groupId=$(curl -sk --request POST --header "PRIVATE-TOKEN: $TARGET_PAT" --header "Content-Type: application/json" --data '{"path": "'$SOURCE_GROUP'", "name": "'$SOURCE_GROUP'", "visibility": "internal" }' "https://$TARGET_FQDN/api/v4/groups/" | jq '.["id"]')
     _debug "Group created ID: $groupId"
+    TARGET_GROUP_ID=$groupId
 
     cd source
     for f in *; do
@@ -187,10 +196,15 @@ function pushRepos() {
   cd $repoPath
   for f in *; do
     if [ -d "$f" ]; then
-      _debug "Pushing repo $f"
-      git -C $f add .
-      git -C $f commit -m "updated via clone-repo.sh"
-      git -C $f push
+      hasGit=$(find $f -type d -name ".git")
+      if [ -z $hasGit ]; then
+        error ${LINENO} ".git not found in target repo $f"
+      else
+        _debug "Pushing repo $f"
+        git -C $f add .
+        git -C $f commit -m "updated via clone-repo.sh"
+        git -C $f push
+      fi
     fi
   done
   cd ../
@@ -270,5 +284,27 @@ usage() {
   _information "$_helpText" 1>&2
   exit 1
 }
+
+function error() {
+  local parent_lineno="$1"
+  local message="$2"
+  local code="${3:-1}"
+  if [[ -n "$message" ]]; then
+    echo >&2 -e "\e[41mError on or near line ${parent_lineno}: ${message}; exiting with status ${code}\e[0m"
+  else
+    echo >&2 -e "\e[41mError on or near line ${parent_lineno}; exiting with status ${code}\e[0m"
+  fi
+  echo ""
+
+  exit "${code}"
+}
+
+function finish {
+  # Clean up temp folders
+  cd /workspaces/symphony/scripts/utils
+  rm -rf target source temp
+}
+
+trap finish EXIT
 
 main

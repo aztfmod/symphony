@@ -7,27 +7,34 @@ In the `./tests` folder you can find [Terratest](https://github.com/gruntwork-io
 - Shared Services
 - Networking
 
-> These tests are not **provision** or **destroy** resources on the _Azure Subscription_
-
 ## Prerequisites
 
-Execute the following commands to have rover running on your environment;
+- Clone the Rover repo
 
-```bash
-# Clone the rover repo and cd into it
-git clone https://github.com/aztfmod/rover
-cd rover
+  ```bash
+  git clone https://github.com/aztfmod/rover
+   ```
 
-# Create /tf folder at the root
-mkdir -p /tf
+- Open the repo in VSCode and reopen in a dev container.
+- Clone the symphony repo to /tf/caf/symphony
+  
+  ```bash
+  git clone git@github.com:aztfmod/symphony.git /tf/caf/symphony
+  ```
 
-# Copy the scripts folder into the /tf folder
-cp -r scripts /tf/rover
+- Create a local caf environment by running the file local.sh in the caf folder of this repo.
 
-# Give rover alias to /tf/rover/rover.sh file
-alias rover=/tf/rover/rover.sh
-```
+- Navigate to the tests folder of this repo. `cd tests`
 
+## Expose the argocd service
+
+- `az aks list --query "[?tags.landingzone].{name:name,resourceGroup:resourceGroup}" -o table `
+  Note the cluster name and rg name
+
+- `az aks get-credentials -n <name from above> -g <rg name from above>`
+- In a seperate terminal window `kubectl port-forward svc/argo-argocd-server 9090:80 -n argocd`
+  Keep this window alive to ensure the port forward to the cluster is up.
+  
 ## Guideline to run the tests
 
 Clone `symphony` repo on your computer (_prefferably onto a WSL instance_)
@@ -46,6 +53,6 @@ go mod tidy
 
 To run the tests, execute the following command;
 
-```bash
-go test .
-```
+Invoke the tests via the provided bash script. `./run_tests.sh -e local-test -d`
+
+run_tests.sh is invoked with -e to specificy the environment name. In this case we are using local-test because that is what is specified in local.sh

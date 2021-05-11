@@ -1,6 +1,6 @@
 {
   "name": "Symphony GitLab Demo Application",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": "false",
   "dependencies": {
     "rover": {
@@ -32,9 +32,9 @@
     "terraform": {
       "landing-zone": {
         "source": "aztfmod/caf/azurerm",
-        "version": "~>5.3.0",
+        "version": "~>5.3.2",
         "env": {
-          "docker-vscode": "aztfmod/rover:0.15.0-2104.1611",
+          "docker-vscode": "aztfmod/rover:0.13.7-2105.0604",
           "azurerm": "~> 2.55.0",
           "aztfmod/azurecaf": "~> 1.2.0",
           "terraform": ">= 0.13"
