@@ -62,7 +62,7 @@ function main() {
   pushRepos "target"
 
   _line_break
-  _success "Repos successfully deployed to https://$TARGET_FQDN/$SOURCE_GROUP"
+  _success "Repos successfully cloned to https://$TARGET_FQDN/$SOURCE_GROUP"
 }
 
 function cloneRepos() {
