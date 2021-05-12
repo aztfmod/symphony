@@ -56,7 +56,7 @@ function main() {
   copySourceCodeToTarget "source" "target"
 
   # Update target FQDNs in code (replaced with GitLab CI vars)
-  updateTargetYml "target"
+  updateYml "target"
 
   # Push target code to Gitlab repo
   pushRepos "target"
@@ -182,11 +182,11 @@ function copySourceCodeToTarget() {
   rm -rf temp
 }
 
-function updateTargetYml() {
+function updateYml() {
   local codePath=$1
 
   if [ ! -z $LAUNCHPAD_ENV ]; then
-    _information "Updating Target env references."
+    _information "Updating env references."
     find $codePath -type f -name "*.yml" -exec sed -i "s/environment: 'demo'/environment: '$LAUNCHPAD_ENV'/g" {} +
   fi
 }
