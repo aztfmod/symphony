@@ -12,6 +12,7 @@ declare LAUNCHPAD_ENV=""
 
 declare DEBUG_FLAG=false
 declare me=$(basename "$0")
+declare pd=$(pwd)
 declare TARGET_GROUP_ID=0
 
 # includes
@@ -36,6 +37,7 @@ shArgs.parse $@
 
 function main() {
   check_inputs
+  check_pats
 
   # Get source code
   if [ ! -z "$SOURCE_LOCAL_PATH" ]; then
@@ -59,6 +61,7 @@ function main() {
   # Push target code to Gitlab repo
   pushRepos "target"
 
+  _line_break
   _success "Repos successfully deployed to https://$TARGET_FQDN/$SOURCE_GROUP"
 }
 
@@ -81,6 +84,7 @@ function cloneRepos() {
     _debug "Cloning $repo"
     git clone $repo
     if [ $? != 0 ]; then
+      _debug "Clone error!"
       if [ $TARGET_GROUP_ID != 0 ] && [ $path == "target" ]; then
         _debug "Cleanup empty target group."
         deleteGroup=$(curl -sk --request DELETE --header "PRIVATE-TOKEN: $TARGET_PAT" "https://$fqdn/api/v4/groups/$TARGET_GROUP_ID")
@@ -114,6 +118,7 @@ function confirmOrCreateTargetRepos() {
   fi
 
   groupId=$(curl -sk "https://$TARGET_FQDN/api/v4/groups?private_token=$TARGET_PAT" | jq '.[] | select(.name=="'$SOURCE_GROUP'")' | jq '.id')
+  echo $groupId
 
   if [ -z $groupId ]; then
     _information "Target group not found, creating target group and repos."
@@ -211,7 +216,29 @@ function pushRepos() {
   rm -rf source target
 }
 
-check_inputs() {
+function validate_pat() {
+  local pat=$1
+  local fqdn=$2
+
+  patWorks=$(curl -sk --header "PRIVATE-TOKEN: $pat" "https://$fqdn/api/v4/application/settings")
+  noAuth='{"message":"401 Unauthorized"}'
+
+  if [[ -z $patWorks ]] || [[ "$patWorks" = "$noAuth" ]]; then
+    error ${LINENO} "GitLab $fqdn PAT $pat is not valid"
+  fi
+}
+
+function check_pats() {
+  _debug "Checking Pats"
+
+  validate_pat $TARGET_PAT $TARGET_FQDN
+
+  if [ ! -z "$SOURCE_PAT" ] && [ ! -z "$SOURCE_FQDN" ]; then
+    validate_pat $SOURCE_PAT $SOURCE_FQDN
+  fi
+}
+
+function check_inputs() {
   local req=""
 
   _debug_line_break
@@ -299,9 +326,9 @@ function error() {
   exit "${code}"
 }
 
-function finish {
+function finish() {
   # Clean up temp folders
-  cd /workspaces/symphony/scripts/utils
+  cd $pd
   rm -rf target source temp
 }
 
