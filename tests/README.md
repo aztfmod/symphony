@@ -51,6 +51,13 @@ In case of an issue, run the following command to make sure all the dependencies
 go mod tidy
 ```
 
+Ensure your bash env has gcc installed. If not then install with the following commands
+```bash
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt install build-essential
+```
+
 To run the tests, execute the following command;
 
 Invoke the tests via the provided bash script. `./run_tests.sh -e local-test -d`
