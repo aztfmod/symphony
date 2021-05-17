@@ -34,7 +34,7 @@ aks:
 
 argocd:
   stage: argocd
-  tags:D
+  tags:
     - gitlab-runner-4
   script:
     - |

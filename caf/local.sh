@@ -44,7 +44,7 @@ rover -lz $CAF_DIR/caf_modules/landingzones/caf_solution \
 
 rover -lz $CAF_DIR/caf_modules/landingzones/caf_solution \
   -tfstate landing_zone_aks.tfstate \
-  -var-folder $CAF_DIR/app_argocd/level3/aks \
+  -var-folder $CAF_DIR/config_app_argocd/level3/aks \
   -parallelism 30 \
   -level level3 \
   -env ${caf_environment} \
