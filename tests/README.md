@@ -25,15 +25,6 @@ In the `./tests` folder you can find [Terratest](https://github.com/gruntwork-io
 - Create a local caf environment by running the file local.sh in the caf folder of this repo.
 
 - Navigate to the tests folder of this repo. `cd tests`
-
-## Expose the argocd service
-
-- `az aks list --query "[?tags.landingzone].{name:name,resourceGroup:resourceGroup}" -o table `
-  Note the cluster name and rg name
-
-- `az aks get-credentials -n <name from above> -g <rg name from above>`
-- In a seperate terminal window `kubectl port-forward svc/argo-argocd-server 9090:80 -n argocd`
-  Keep this window alive to ensure the port forward to the cluster is up.
   
 ## Guideline to run the tests
 
@@ -60,6 +51,6 @@ sudo apt install build-essential
 
 To run the tests, execute the following command;
 
-Invoke the tests via the provided bash script. `./run_tests.sh -e local-test -d`
+Invoke the tests via the provided bash script. `./run_tests.sh -e demo -d`
 
-run_tests.sh is invoked with -e to specificy the environment name. In this case we are using local-test because that is what is specified in local.sh
+run_tests.sh is invoked with -e to specify the environment name. In this case we are using demo because that is what is specified in local.sh
