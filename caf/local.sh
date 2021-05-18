@@ -59,3 +59,11 @@ rover -lz $CAF_DIR/caf_modules_argocd/landingzones/aks_applications \
   -level level4 \
   -env ${caf_environment} \
   -a apply
+
+rover -lz $CAF_DIR/caf_modules/landingzones/caf_solution \
+  -tfstate landing_zone_sql.tfstate \
+  -var-folder $CAF_DIR/config_app_sql/level3/sql \
+  -parallelism 30 \
+  -level level3 \
+  -env ${caf_environment} \
+  -a apply
