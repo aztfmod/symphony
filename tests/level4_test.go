@@ -33,6 +33,7 @@ var argoCdExpectedServiceNames = []struct {
 	nameSpace   string
 }{
 	{
+		testID:      1,
 		serviceName: "argo-argocd-application-controller",
 		nameSpace:   "argocd",
 	},
