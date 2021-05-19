@@ -50,6 +50,7 @@ func prepareTestTable() TestStructure {
 	}
 
 	prefix := os.Getenv("PREFIX")
+	os.Unsetenv("TF_DATA_DIR")
 
 	test := TestStructure{
 		Prefix:         prefix,
@@ -58,8 +59,6 @@ func prepareTestTable() TestStructure {
 		StateFilePath:  os.Getenv("STATE_FILE_PATH"),
 		LandingZones:   make([]LandingZone, 0),
 	}
-
-	fmt.Println(fmt.Sprintf("********************* STATE FILE PATH: %s", test.StateFilePath))
 
 	options := &terraform.Options{
 		TerraformDir: test.StateFilePath,
@@ -130,7 +129,6 @@ func getKeyVaults(outputJson string, key string) map[string](map[string]interfac
 
 func getKeyVaultByResourceGroup(keyVaults map[string](map[string]interface{}), resourceGroup string) (map[string]interface{}, error) {
 	for _, keyVault := range keyVaults {
-		fmt.Println(keyVault)
 		id := keyVault["id"].(string)
 		searchString := fmt.Sprintf("resourceGroups/%s", resourceGroup)
 		if strings.Contains(id, searchString) {
