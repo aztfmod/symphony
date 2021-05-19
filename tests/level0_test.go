@@ -3,6 +3,7 @@ package caf_tests
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
@@ -84,15 +85,30 @@ func TestLaunchpadResourceGroupHasTags(t *testing.T) {
 }
 
 func TestLaunchpadResourceGroupHasKeyVault(t *testing.T) {
+	//arrange
 	t.Parallel()
-
 	test := prepareTestTable()
+	outputJson := terraform.OutputJson(t, test.TerraformOptions, "objects")
+	resourceGroups := getResourceGroups(outputJson, "launchpad")
+	keyVaults := getKeyVaults(outputJson, "launchpad")
 
-	for _, landingZone := range test.LandingZones {
-		kv := azure.GetKeyVault(t, landingZone.ResourceGroupName, landingZone.KeyVaultName, test.SubscriptionID)
+	for _, resourceGroup := range resourceGroups {
+		rgName := resourceGroup["name"].(string)
+		if !strings.Contains(rgName, "security") {
+			keyVault, err := getKeyVaultByResourceGroup(keyVaults, rgName)
+			if err != nil {
+				panic(err)
+			}
+			keyVaultName := keyVault["name"].(string)
 
-		assert.NotNil(t, kv, fmt.Sprintf("KeyVault (%s) does not exists", landingZone.KeyVaultName))
+			//act
+			kv := azure.GetKeyVault(t, rgName, keyVaultName, test.SubscriptionID)
+
+			//assert
+			assert.NotNil(t, kv, fmt.Sprintf("KeyVault (%s) does not exists", keyVaultName))
+		}
 	}
+
 }
 
 func TestLaunchpadResourceGroupHasStorageAccount(t *testing.T) {

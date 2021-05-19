@@ -2,10 +2,12 @@ package caf_tests
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	terraform "github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/joho/godotenv"
@@ -57,6 +59,8 @@ func prepareTestTable() TestStructure {
 		LandingZones:   make([]LandingZone, 0),
 	}
 
+	fmt.Println(fmt.Sprintf("********************* STATE FILE PATH: %s", test.StateFilePath))
+
 	options := &terraform.Options{
 		TerraformDir: test.StateFilePath,
 	}
@@ -107,4 +111,31 @@ func getResourceGroups(outputJson string, key string) map[string](map[string]int
 		m[key] = rg
 	}
 	return m
+}
+
+func getKeyVaults(outputJson string, key string) map[string](map[string]interface{}) {
+	var result map[string]interface{}
+	json.Unmarshal([]byte(outputJson), &result)
+	launchpad := result[key].(map[string]interface{})
+	keyVaults := launchpad["keyvaults"].(map[string]interface{})
+
+	var m map[string](map[string]interface{})
+	m = make(map[string](map[string]interface{}))
+	for key, resourceGroup := range keyVaults {
+		rg := resourceGroup.(map[string](interface{}))
+		m[key] = rg
+	}
+	return m
+}
+
+func getKeyVaultByResourceGroup(keyVaults map[string](map[string]interface{}), resourceGroup string) (map[string]interface{}, error) {
+	for _, keyVault := range keyVaults {
+		fmt.Println(keyVault)
+		id := keyVault["id"].(string)
+		searchString := fmt.Sprintf("resourceGroups/%s", resourceGroup)
+		if strings.Contains(id, searchString) {
+			return keyVault, nil
+		}
+	}
+	return nil, errors.New("Keyvault not found")
 }
