@@ -94,10 +94,10 @@ func getLandingZoneKey(outputJson string) string {
 	return landing_zone_key.(string)
 }
 
-func getResourceGroups(outputJson string) map[string](map[string]interface{}) {
+func getResourceGroups(outputJson string, key string) map[string](map[string]interface{}) {
 	var result map[string]interface{}
 	json.Unmarshal([]byte(outputJson), &result)
-	launchpad := result["launchpad"].(map[string]interface{})
+	launchpad := result[key].(map[string]interface{})
 	resourceGroups := launchpad["resource_groups"].(map[string]interface{})
 
 	var m map[string](map[string]interface{})

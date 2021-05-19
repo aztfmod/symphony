@@ -28,7 +28,7 @@ func TestLaunchpadResourceGroupIsExists(t *testing.T) {
 	t.Parallel()
 	test := prepareTestTable()
 	outputJson := terraform.OutputJson(t, test.TerraformOptions, "objects")
-	resourceGroups := getResourceGroups(outputJson)
+	resourceGroups := getResourceGroups(outputJson, "launchpad")
 
 	for _, resourceGroup := range resourceGroups {
 		rgName := resourceGroup["name"].(string)
@@ -47,7 +47,7 @@ func TestLaunchpadResourceGroupIsExistsViaClient(t *testing.T) {
 	test := prepareTestTable()
 	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
 	outputJson := terraform.OutputJson(t, test.TerraformOptions, "objects")
-	resourceGroups := getResourceGroups(outputJson)
+	resourceGroups := getResourceGroups(outputJson, "launchpad")
 
 	for _, resourceGroup := range resourceGroups {
 		rgName := resourceGroup["name"].(string)
@@ -67,7 +67,7 @@ func TestLaunchpadResourceGroupHasTags(t *testing.T) {
 	test := prepareTestTable()
 	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
 	outputJson := terraform.OutputJson(t, test.TerraformOptions, "objects")
-	resourceGroups := getResourceGroups(outputJson)
+	resourceGroups := getResourceGroups(outputJson, "launchpad")
 
 	for _, resourceGroup := range resourceGroups {
 		rgName := resourceGroup["name"].(string)
