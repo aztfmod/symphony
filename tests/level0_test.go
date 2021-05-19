@@ -6,52 +6,80 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
+	terraform "github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLaunchpadResourceGroupIsExists(t *testing.T) {
+func TestLaunchpadLandingZoneKey(t *testing.T) {
+	//arrange
 	t.Parallel()
-
 	test := prepareTestTable()
+	outputJson := terraform.OutputJson(t, test.TerraformOptions, "objects")
 
-	for _, landingZone := range test.LandingZones {
-		exists := azure.ResourceGroupExists(t, landingZone.ResourceGroupName, test.SubscriptionID)
+	//act
+	landingZoneKey := getLandingZoneKey(outputJson)
 
-		assert.True(t, exists, fmt.Sprintf("Resource group (%s) does not exist", landingZone.ResourceGroupName))
+	//assert
+	assert.Equal(t, "launchpad", landingZoneKey)
+}
+
+func TestLaunchpadResourceGroupIsExists(t *testing.T) {
+	//arrange
+	t.Parallel()
+	test := prepareTestTable()
+	outputJson := terraform.OutputJson(t, test.TerraformOptions, "objects")
+	resourceGroups := getResourceGroups(outputJson)
+
+	for _, resourceGroup := range resourceGroups {
+		rgName := resourceGroup["name"].(string)
+
+		//act
+		exists := azure.ResourceGroupExists(t, rgName, test.SubscriptionID)
+
+		//assert
+		assert.True(t, exists, fmt.Sprintf("Resource group (%s) does not exist", rgName))
 	}
 }
 
 func TestLaunchpadResourceGroupIsExistsViaClient(t *testing.T) {
+	//arrange
 	t.Parallel()
-
 	test := prepareTestTable()
-
 	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
+	outputJson := terraform.OutputJson(t, test.TerraformOptions, "objects")
+	resourceGroups := getResourceGroups(outputJson)
 
-	for _, landingZone := range test.LandingZones {
-		_, err := client.CheckExistence(context.Background(), landingZone.ResourceGroupName)
+	for _, resourceGroup := range resourceGroups {
+		rgName := resourceGroup["name"].(string)
 
-		assert.NoError(t, err, fmt.Sprintf("Resource group (%s) does not exist", landingZone.ResourceGroupName))
+		//act
+		_, err := client.CheckExistence(context.Background(), rgName)
+
+		//assert
+		assert.NoError(t, err, fmt.Sprintf("Resource group (%s) does not exist", rgName))
 	}
+
 }
 
 func TestLaunchpadResourceGroupHasTags(t *testing.T) {
+	//arrange
 	t.Parallel()
-
 	test := prepareTestTable()
+	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
+	outputJson := terraform.OutputJson(t, test.TerraformOptions, "objects")
+	resourceGroups := getResourceGroups(outputJson)
 
-	client, errClient := azure.GetResourceGroupClientE(test.SubscriptionID)
+	for _, resourceGroup := range resourceGroups {
+		rgName := resourceGroup["name"].(string)
+		tags := resourceGroup["tags"].(map[string]interface{})
+		level := tags["level"].(string)
 
-	assert.NoError(t, errClient, "ResourceGroup Client couldn't read")
-
-	for _, landingZone := range test.LandingZones {
-		rg, errRG := client.Get(context.Background(), landingZone.ResourceGroupName)
-
-		assert.NoError(t, errRG, fmt.Sprintf("ResourceGroup (%s) couldn't read", landingZone.ResourceGroupName))
+		rg, errRG := client.Get(context.Background(), rgName)
+		assert.NoError(t, errRG, fmt.Sprintf("ResourceGroup (%s) couldn't read", rgName))
 
 		assert.Equal(t, test.Environment, *rg.Tags["environment"], "Environment Tag is not correct")
 		assert.Equal(t, "launchpad", *rg.Tags["landingzone"], "LandingZone Tag is not correct")
-		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *rg.Tags["level"], "Level Tag is not correct")
+		assert.Equal(t, level, *rg.Tags["level"], "Level Tag is not correct")
 	}
 }
 

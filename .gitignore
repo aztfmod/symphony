@@ -11,3 +11,5 @@
 
 #tmp data
 .data
+
+.env
