@@ -106,60 +106,60 @@ func TestLaunchpadResourceGroupHasKeyVault(t *testing.T) {
 
 }
 
-// func TestLaunchpadResourceGroupHasStorageAccount(t *testing.T) {
-// 	t.Parallel()
+func TestLaunchpadResourceGroupHasStorageAccount(t *testing.T) {
+	t.Parallel()
 
-// 	test := prepareTestTable()
+	test := prepareTestTable()
 
-// 	for _, landingZone := range test.LandingZones {
-// 		exists := azure.StorageAccountExists(t, landingZone.StorageAccountName, landingZone.ResourceGroupName, test.SubscriptionID)
+	for _, landingZone := range test.LandingZones {
+		exists := azure.StorageAccountExists(t, landingZone.StorageAccountName, landingZone.ResourceGroupName, test.SubscriptionID)
 
-// 		assert.True(t, exists, fmt.Sprintf("Storage Account (%s) does not exists", landingZone.StorageAccountName))
-// 	}
-// }
+		assert.True(t, exists, fmt.Sprintf("Storage Account (%s) does not exists", landingZone.StorageAccountName))
+	}
+}
 
-// func TestLaunchpadKeyVaultHasTags(t *testing.T) {
-// 	t.Parallel()
+func TestLaunchpadKeyVaultHasTags(t *testing.T) {
+	t.Parallel()
 
-// 	test := prepareTestTable()
+	test := prepareTestTable()
 
-// 	for _, landingZone := range test.LandingZones {
-// 		kv := azure.GetKeyVault(t, landingZone.ResourceGroupName, landingZone.KeyVaultName, test.SubscriptionID)
+	for _, landingZone := range test.LandingZones {
+		kv := azure.GetKeyVault(t, landingZone.ResourceGroupName, landingZone.KeyVaultName, test.SubscriptionID)
 
-// 		assert.Equal(t, test.Environment, *kv.Tags["environment"], "Environment Tag is not correct")
-// 		assert.Equal(t, "launchpad", *kv.Tags["landingzone"], "LandingZone Tag is not correct")
-// 		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *kv.Tags["level"], "Level Tag is not correct")
-// 		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *kv.Tags["tfstate"], "TF State Tag is not correct")
-// 	}
-// }
+		assert.Equal(t, test.Environment, *kv.Tags["environment"], "Environment Tag is not correct")
+		assert.Equal(t, "launchpad", *kv.Tags["landingzone"], "LandingZone Tag is not correct")
+		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *kv.Tags["level"], "Level Tag is not correct")
+		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *kv.Tags["tfstate"], "TF State Tag is not correct")
+	}
+}
 
-// func TestLaunchpadStorageAccountHasTags(t *testing.T) {
-// 	t.Parallel()
+func TestLaunchpadStorageAccountHasTags(t *testing.T) {
+	t.Parallel()
 
-// 	test := prepareTestTable()
+	test := prepareTestTable()
 
-// 	for _, landingZone := range test.LandingZones {
-// 		storage, err := azure.GetStorageAccountE(landingZone.StorageAccountName, landingZone.ResourceGroupName, test.SubscriptionID)
+	for _, landingZone := range test.LandingZones {
+		storage, err := azure.GetStorageAccountE(landingZone.StorageAccountName, landingZone.ResourceGroupName, test.SubscriptionID)
 
-// 		assert.NoError(t, err, "Storage Account couldn't read")
+		assert.NoError(t, err, "Storage Account couldn't read")
 
-// 		assert.Equal(t, test.Environment, *storage.Tags["environment"], "Environment Tag is not correct")
-// 		assert.Equal(t, "launchpad", *storage.Tags["landingzone"], "LandingZone Tag is not correct")
-// 		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *storage.Tags["level"], "Level Tag is not correct")
-// 		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *storage.Tags["tfstate"], "TF State Tag is not correct")
-// 	}
-// }
+		assert.Equal(t, test.Environment, *storage.Tags["environment"], "Environment Tag is not correct")
+		assert.Equal(t, "launchpad", *storage.Tags["landingzone"], "LandingZone Tag is not correct")
+		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *storage.Tags["level"], "Level Tag is not correct")
+		assert.Equal(t, fmt.Sprintf("level%d", landingZone.Level), *storage.Tags["tfstate"], "TF State Tag is not correct")
+	}
+}
 
-// func TestLaunchpadStorageAccountHasTFStateContainer(t *testing.T) {
-// 	t.Parallel()
+func TestLaunchpadStorageAccountHasTFStateContainer(t *testing.T) {
+	t.Parallel()
 
-// 	test := prepareTestTable()
+	test := prepareTestTable()
 
-// 	for _, landingZone := range test.LandingZones {
-// 		containerName := "tfstate"
+	for _, landingZone := range test.LandingZones {
+		containerName := "tfstate"
 
-// 		exists := azure.StorageBlobContainerExists(t, containerName, landingZone.StorageAccountName, landingZone.ResourceGroupName, test.SubscriptionID)
+		exists := azure.StorageBlobContainerExists(t, containerName, landingZone.StorageAccountName, landingZone.ResourceGroupName, test.SubscriptionID)
 
-// 		assert.True(t, exists, "TF State Container does not exist")
-// 	}
-// }
+		assert.True(t, exists, "TF State Container does not exist")
+	}
+}
