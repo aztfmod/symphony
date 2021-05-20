@@ -18,6 +18,7 @@ type AzureResource struct {
 
 type ResourceGroups = map[string](AzureResource)
 type KeyVaults = map[string](AzureResource)
+type StorageAccounts = map[string](AzureResource)
 type TerraFormState struct {
 	Objects        Resource
 	SubscriptionID string
@@ -29,6 +30,7 @@ var TfState TerraFormState
 
 func NewTerraformState(t *testing.T, key string) *TerraFormState {
 	tfState := new(TerraFormState)
+  os.Unsetenv("TF_DATA_DIR")
 	options := &terraform.Options{
 		TerraformDir: os.Getenv("STATE_FILE_PATH"),
 	}
@@ -81,6 +83,31 @@ func (tfState TerraFormState) GetKeyVaultByResourceGroup(resourceGroup string) (
 		}
 	}
 	return *NewAzureResource(nil), errors.New("Keyvault not found")
+}
+
+func (tfState TerraFormState) GetStorageAccounts() KeyVaults {
+	resourceList := tfState.Objects[tfState.Key].(Resource)
+	storageAccounts := resourceList["storage_accounts"].(Resource)
+
+	var m StorageAccounts
+	m = make(StorageAccounts)
+	for key, resourceGroup := range storageAccounts {
+		sa := resourceGroup.(Resource)
+		m[key] = *NewAzureResource(sa)
+	}
+	return m
+}
+
+func (tfState TerraFormState) GetStorageAccountByResourceGroup(resourceGroup string) (AzureResource, error) {
+	storageAccounts := tfState.GetStorageAccounts()
+	for _, storageAccount := range storageAccounts {
+		id := storageAccount.Resource["id"].(string)
+		searchString := fmt.Sprintf("resourceGroups/%s", resourceGroup)
+		if strings.Contains(id, searchString) {
+			return storageAccount, nil
+		}
+	}
+	return *NewAzureResource(nil), errors.New("Storage Account not found")
 }
 
 func NewAzureResource(resource Resource) *AzureResource {
