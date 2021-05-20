@@ -42,9 +42,24 @@ func NewTerraformState(t *testing.T, key string) *TerraFormState {
 	return tfState
 }
 
-func (tfState TerraFormState) GetLandingZoneKey() string {
+func (tfState TerraFormState) GetResources() Resource {
 	resourceList := tfState.Objects[tfState.Key].(Resource)
+	return resourceList
+}
+
+func (tfState TerraFormState) GetClientConfig() Resource {
+	resourceList := tfState.GetResources()
 	client_config := resourceList["client_config"].(Resource)
+	return client_config
+}
+
+func (tfState TerraFormState) GetGlobalSettings() Resource {
+	resourceList := tfState.GetResources()
+	client_config := resourceList["global_settings"].(Resource)
+	return client_config
+}
+func (tfState TerraFormState) GetLandingZoneKey() string {
+	client_config := tfState.GetClientConfig()
 	landing_zone_key := client_config["landingzone_key"]
 	return landing_zone_key.(string)
 }
