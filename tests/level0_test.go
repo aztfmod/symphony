@@ -108,7 +108,6 @@ func TestLaunchpadResourceGroupHasKeyVault(t *testing.T) {
 
 func TestLaunchpadKeyVaultHasTags(t *testing.T) {
 	t.Parallel()
-
   tfState := NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
@@ -139,7 +138,6 @@ func TestLaunchpadKeyVaultHasTags(t *testing.T) {
 
 func TestLaunchpadResourceGroupHasStorageAccount(t *testing.T) {
 	t.Parallel()
-
   tfState := NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
@@ -165,7 +163,6 @@ func TestLaunchpadResourceGroupHasStorageAccount(t *testing.T) {
 
 func TestLaunchpadStorageAccountHasTags(t *testing.T) {
 	t.Parallel()
-
   tfState := NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
@@ -199,7 +196,6 @@ func TestLaunchpadStorageAccountHasTags(t *testing.T) {
 
 func TestLaunchpadStorageAccountHasTFStateContainer(t *testing.T) {
 	t.Parallel()
-
   tfState := NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
