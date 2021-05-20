@@ -89,7 +89,7 @@ main(){
 }
 
 lookup_image_urn(){
-    urn=$(az vm image list --all -f $IMAGE_OFFER -p $IMAGE_PUBLISHER --query [].urn -o tsv)
+    urn=$(az vm image list --all -f $IMAGE_OFFER -l $LOCATION -p $IMAGE_PUBLISHER --query [].urn -o tsv)
 
     echo $urn
 }
