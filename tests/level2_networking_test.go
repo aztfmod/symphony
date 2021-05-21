@@ -45,7 +45,7 @@ func TestVirtualNetworksAreInDifferentRegions(t *testing.T) {
 		locations = append(locations, *vn.Location)
 	}
 
-	assert.NotEqual(t, locations[0], locations[0], fmt.Sprintf("Virtual Networks in the 'landingzone=%s' resource groups should provisioned in different regions", tfState.GetLandingZoneKey()))
+	assert.NotEqual(t, locations[0], locations[1], fmt.Sprintf("Virtual Networks in the 'landingzone=%s' resource groups should provisioned in different regions", tfState.GetLandingZoneKey()))
 }
 
 func TestBastionSubNetSecurityRulesCount(t *testing.T) {
