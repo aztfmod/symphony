@@ -8,22 +8,11 @@ import (
 	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
-	"github.com/joho/godotenv"
 
-	"log"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestMain(m *testing.M) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("No .env file found")
-	}
-	os.Exit(m.Run())
-}
 
 func TestLaunchpadLandingZoneKey(t *testing.T) {
 	//arrange
@@ -107,15 +96,14 @@ func TestLaunchpadResourceGroupHasKeyVault(t *testing.T) {
 	}
 }
 
-
 func TestLaunchpadKeyVaultHasTags(t *testing.T) {
 	t.Parallel()
-  tfState := NewTerraformState(t, "launchpad")
+	tfState := NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
 	for _, resourceGroup := range resourceGroups {
 		rgName := resourceGroup.GetName()
-    level := resourceGroup.GetLevel()
+		level := resourceGroup.GetLevel()
 
 		if !strings.Contains(rgName, "security") {
 			keyVault, err := tfState.GetKeyVaultByResourceGroup(rgName)
@@ -130,20 +118,20 @@ func TestLaunchpadKeyVaultHasTags(t *testing.T) {
 
 			//assert
 			assert.NotNil(t, kv, fmt.Sprintf("KeyVault (%s) does not exists", keyVaultName))
-      assert.Equal(t, tfState.Environment, *kv.Tags["environment"], "Environment Tag is not correct")
-		  assert.Equal(t, tfState.Key, *kv.Tags["landingzone"], "LandingZone Tag is not correct")
-		  assert.Equal(t, level, *kv.Tags["level"], "Level Tag is not correct")
-		  assert.Equal(t, level, *kv.Tags["tfstate"], "TF State Tag is not correct")
+			assert.Equal(t, tfState.Environment, *kv.Tags["environment"], "Environment Tag is not correct")
+			assert.Equal(t, tfState.Key, *kv.Tags["landingzone"], "LandingZone Tag is not correct")
+			assert.Equal(t, level, *kv.Tags["level"], "Level Tag is not correct")
+			assert.Equal(t, level, *kv.Tags["tfstate"], "TF State Tag is not correct")
 		}
 	}
 }
 
 func TestLaunchpadResourceGroupHasStorageAccount(t *testing.T) {
 	t.Parallel()
-  tfState := NewTerraformState(t, "launchpad")
+	tfState := NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
-  for _, resourceGroup := range resourceGroups {
+	for _, resourceGroup := range resourceGroups {
 		rgName := resourceGroup.GetName()
 		if !strings.Contains(rgName, "security") {
 			storageAccount, err := tfState.GetStorageAccountByResourceGroup(rgName)
@@ -154,10 +142,10 @@ func TestLaunchpadResourceGroupHasStorageAccount(t *testing.T) {
 			storageAccountName := storageAccount.GetName()
 
 			//act
-      storageAccountExists := azure.StorageAccountExists(t, storageAccountName, rgName, tfState.SubscriptionID)
+			storageAccountExists := azure.StorageAccountExists(t, storageAccountName, rgName, tfState.SubscriptionID)
 
-      //assert
-      assert.True(t, storageAccountExists, "storage account does not exist")
+			//assert
+			assert.True(t, storageAccountExists, "storage account does not exist")
 
 		}
 	}
@@ -165,13 +153,12 @@ func TestLaunchpadResourceGroupHasStorageAccount(t *testing.T) {
 
 func TestLaunchpadStorageAccountHasTags(t *testing.T) {
 	t.Parallel()
-  tfState := NewTerraformState(t, "launchpad")
+	tfState := NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
-
-  for _, resourceGroup := range resourceGroups {
+	for _, resourceGroup := range resourceGroups {
 		rgName := resourceGroup.GetName()
-    level := resourceGroup.GetLevel()
+		level := resourceGroup.GetLevel()
 
 		if !strings.Contains(rgName, "security") {
 			storageAccount, err := tfState.GetStorageAccountByResourceGroup(rgName)
@@ -181,16 +168,15 @@ func TestLaunchpadStorageAccountHasTags(t *testing.T) {
 
 			storageAccountName := storageAccount.GetName()
 
-
 			//act
-      localStorage, err := azure.GetStorageAccountE(storageAccountName, rgName, tfState.SubscriptionID)
+			localStorage, err := azure.GetStorageAccountE(storageAccountName, rgName, tfState.SubscriptionID)
 
-      //assert
-      assert.NotNil(t, localStorage, fmt.Sprintf("Storage Account (%s) does not exists", storageAccountName))
-      assert.NoError(t, err, "Storage Account couldn't read")
-      assert.Equal(t, tfState.Environment, *localStorage.Tags["environment"], "Environment Tag is not correct")
-		  assert.Equal(t, tfState.Key, *localStorage.Tags["landingzone"], "LandingZone Tag is not correct")
-      assert.Equal(t, level, *localStorage.Tags["level"], "Level Tag is not correct")
+			//assert
+			assert.NotNil(t, localStorage, fmt.Sprintf("Storage Account (%s) does not exists", storageAccountName))
+			assert.NoError(t, err, "Storage Account couldn't read")
+			assert.Equal(t, tfState.Environment, *localStorage.Tags["environment"], "Environment Tag is not correct")
+			assert.Equal(t, tfState.Key, *localStorage.Tags["landingzone"], "LandingZone Tag is not correct")
+			assert.Equal(t, level, *localStorage.Tags["level"], "Level Tag is not correct")
 
 		}
 	}
@@ -198,10 +184,10 @@ func TestLaunchpadStorageAccountHasTags(t *testing.T) {
 
 func TestLaunchpadStorageAccountHasTFStateContainer(t *testing.T) {
 	t.Parallel()
-  tfState := NewTerraformState(t, "launchpad")
+	tfState := NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
-  for _, resourceGroup := range resourceGroups {
+	for _, resourceGroup := range resourceGroups {
 		rgName := resourceGroup.GetName()
 		if !strings.Contains(rgName, "security") {
 			storageAccount, err := tfState.GetStorageAccountByResourceGroup(rgName)
@@ -210,13 +196,13 @@ func TestLaunchpadStorageAccountHasTFStateContainer(t *testing.T) {
 			}
 
 			storageAccountName := storageAccount.GetName()
-      containerName := "tfstate"
+			containerName := "tfstate"
 
 			//act
-      exists := azure.StorageBlobContainerExists(t, containerName, storageAccountName, rgName, tfState.SubscriptionID)
+			exists := azure.StorageBlobContainerExists(t, containerName, storageAccountName, rgName, tfState.SubscriptionID)
 
-      //assert
-		  assert.True(t, exists, "TF State Container does not exist")
+			//assert
+			assert.True(t, exists, "TF State Container does not exist")
 
 		}
 	}

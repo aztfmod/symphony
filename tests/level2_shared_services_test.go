@@ -1,3 +1,5 @@
+// +build level2,sharedsvc
+
 package caf_tests
 
 import (
@@ -9,66 +11,84 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSharedServicesResourceGroupsExists(t *testing.T) {
+func TestSharedServicesLandingZoneKey(t *testing.T) {
+	//arrange
 	t.Parallel()
+	tfState := NewTerraformState(t, "shared_services")
 
-	test := prepareTestTable()
+	//act
+	landingZoneKey := tfState.GetLandingZoneKey()
 
-	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
-
-	result, _ := client.List(context.Background(), "tagName eq 'level' and tagValue eq 'level2'", nil)
-
-	rgList := result.Values()
-
-	actual := 0
-	for _, rg := range rgList {
-		if *rg.Tags["landingzone"] == "shared_services" && *rg.Tags["environment"] == test.Environment {
-			actual++
-		}
-	}
-
-	expected := 1
-
-	assert.Equal(t, expected, actual, fmt.Sprintf("There must be %d resource group with 'level=level2' and 'environment=%s' tags, found %d", expected, test.Environment, actual))
+	//assert
+	assert.Equal(t, "shared_services", landingZoneKey)
 }
 
-func TestSharedServicesHasOneResourceGroupForSharedServices(t *testing.T) {
+func TestSharedServicesPrimaryResourceGroupsExists(t *testing.T) {
+	//arrange
 	t.Parallel()
 
-	test := prepareTestTable()
+	tfState := NewTerraformState(t, "shared_services")
+	resourceGroups := tfState.GetResourceGroups()
 
-	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
+	if resourceGroup, ok := resourceGroups["primary"]; ok {
+		name := resourceGroup.GetName()
+		exists := azure.ResourceGroupExists(t, name, tfState.SubscriptionID)
+		assert.True(t, exists, fmt.Sprintf("Resource group (%s) does not exist", name))
+	} else {
+		t.FailNow()
+	}
+}
 
+func TestSharedServicesStateContainsOnlyOneResourceGroup(t *testing.T) {
+	//arrange
+	t.Parallel()
+	tfState := NewTerraformState(t, "shared_services")
+
+	//act
+	resourceGroups := tfState.GetResourceGroups()
+
+	//assert
+	assert.Equal(t, 1, len(resourceGroups), "More than one shared services resource group found in state.")
+}
+
+func TestSharedServicesContainsOnlyOneResourceGroup(t *testing.T) {
+	//arrange
+	t.Parallel()
+	tfState := NewTerraformState(t, "shared_services")
+	client, _ := azure.GetResourceGroupClientE(tfState.SubscriptionID)
+
+	//act
 	result, _ := client.List(context.Background(), "tagName eq 'landingzone' and tagValue eq 'shared_services'", nil)
-
 	rgList := result.Values()
 
-	actual := 0
+	foundResourceGroup := false
 	for _, rg := range rgList {
-		if *rg.Tags["environment"] == test.Environment {
-			actual++
+		if *rg.Tags["environment"] == tfState.Environment {
+			foundResourceGroup = true
 		}
 	}
-
-	expected := 1
-
-	assert.Equal(t, expected, actual, fmt.Sprintf("There must be only one resource group with 'landingzone=shared_services' and 'environment=%s' tags", test.Environment))
+	//assert
+	assert.Equal(t, true, foundResourceGroup, fmt.Sprintf("Shared Services resource group for environment %s was not found", tfState.Environment))
 }
 
 func TestSharedServicesHasRecoveryServiceVault(t *testing.T) {
 	t.Parallel()
+	tfState := NewTerraformState(t, "shared_services")
+	resourceGroups := tfState.GetResourceGroups()
+	recoveryVaults := tfState.GetRecoveryVaults()
 
-	test := prepareTestTable()
+	var recoveryVaultName string
+	if recoveryVault, ok := recoveryVaults["asr1"]; ok {
+		recoveryVaultName = recoveryVault.GetName()
+	} else {
+		t.FailNow()
+	}
 
-	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
-
-	result, _ := client.List(context.Background(), "tagName eq 'landingzone' and tagValue eq 'shared_services'", nil)
-
-	rgList := result.Values()
-
-	rg := rgList[0]
-
-	exist := azure.RecoveryServicesVaultExists(t, fmt.Sprintf("%s-rsv-vaultre1", test.Prefix), *rg.Name, test.SubscriptionID)
-
-	assert.True(t, exist, fmt.Sprintf("Expected Recovery Service Vault does not exists with '%s-rsv-vaultre1' name, under the resource group with 'landingzone=shared_services' tag", test.Prefix))
+	if resourceGroup, ok := resourceGroups["primary"]; ok {
+		resourceGroupName := resourceGroup.GetName()
+		exist := azure.RecoveryServicesVaultExists(t, recoveryVaultName, resourceGroupName, tfState.SubscriptionID)
+		assert.True(t, exist, fmt.Sprintf("Expected Recovery Service Vault '%s' does not exist", recoveryVaultName))
+	} else {
+		t.FailNow()
+	}
 }

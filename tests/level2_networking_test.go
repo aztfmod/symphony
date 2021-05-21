@@ -1,3 +1,5 @@
+// +build level2,networking
+
 package caf_tests
 
 import (
