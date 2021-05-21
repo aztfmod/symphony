@@ -19,6 +19,8 @@ type AzureResource struct {
 type ResourceGroups = map[string](AzureResource)
 type KeyVaults = map[string](AzureResource)
 type StorageAccounts = map[string](AzureResource)
+type RecoveryVaults = map[string](AzureResource)
+
 type TerraFormState struct {
 	Objects        Resource
 	SubscriptionID string
@@ -30,7 +32,7 @@ var TfState TerraFormState
 
 func NewTerraformState(t *testing.T, key string) *TerraFormState {
 	tfState := new(TerraFormState)
-  os.Unsetenv("TF_DATA_DIR")
+	os.Unsetenv("TF_DATA_DIR")
 	options := &terraform.Options{
 		TerraformDir: os.Getenv("STATE_FILE_PATH"),
 	}
@@ -68,8 +70,8 @@ func (tfState TerraFormState) GetResourceGroups() ResourceGroups {
 	resourceList := tfState.Objects[tfState.Key].(Resource)
 	resourceGroups := resourceList["resource_groups"].(Resource)
 	var m ResourceGroups = make(ResourceGroups)
-	for key, resourceGroup := range resourceGroups {
-		rg := resourceGroup.(Resource)
+	for key, item := range resourceGroups {
+		rg := item.(Resource)
 		m[key] = *NewAzureResource(rg)
 	}
 	return m
@@ -81,9 +83,22 @@ func (tfState TerraFormState) GetKeyVaults() KeyVaults {
 
 	var m KeyVaults
 	m = make(KeyVaults)
-	for key, resourceGroup := range keyVaults {
-		kv := resourceGroup.(Resource)
+	for key, item := range keyVaults {
+		kv := item.(Resource)
 		m[key] = *NewAzureResource(kv)
+	}
+	return m
+}
+
+func (tfState TerraFormState) GetRecoveryVaults() RecoveryVaults {
+	resourceList := tfState.Objects[tfState.Key].(Resource)
+	recoveryVaults := resourceList["recovery_vaults"].(Resource)
+
+	var m RecoveryVaults
+	m = make(RecoveryVaults)
+	for key, item := range recoveryVaults {
+		rv := item.(Resource)
+		m[key] = *NewAzureResource(rv)
 	}
 	return m
 }

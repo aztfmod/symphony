@@ -1,3 +1,5 @@
+// +build level3
+
 package caf_tests
 
 import (
