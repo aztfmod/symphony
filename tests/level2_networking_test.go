@@ -5,54 +5,58 @@ package caf_tests
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestThereAreTwoResourceGroupsForNetworkingHub(t *testing.T) {
 	t.Parallel()
 
-	test := prepareTestTable()
+	tfState := NewTerraformState(t, "networking_hub")
+	resourceGroups := tfState.GetResourceGroups()
+	client, _ := azure.GetResourceGroupClientE(tfState.SubscriptionID)
 
-	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
+	for _, resourceGroup := range resourceGroups {
+		name := resourceGroup.GetName()
 
-	result, _ := client.List(context.Background(), "tagName eq 'level' and tagValue eq 'level2'", nil)
+		actual_rc, err := client.Get(context.Background(), name)
+		require.NoError(t, err)
 
-	rgList := result.Values()
-
-	actual := 0
-	for _, rg := range rgList {
-		if *rg.Tags["landingzone"] == "networking_hub" && *rg.Tags["environment"] == test.Environment {
-			actual++
-		}
+		assert.Equal(t, *actual_rc.Tags["landingzone"], tfState.GetLandingZoneKey())
+		assert.Equal(t, *actual_rc.Tags["environment"], tfState.Environment)
+		assert.Equal(t, *actual_rc.Tags["level"], resourceGroup.GetLevel())
 	}
-
-	expected := 2
-
-	assert.Equal(t, expected, actual, fmt.Sprintf("There must be %d resource group with 'landingzone=networking_hub' and 'environment=%s' tags, found %d", expected, test.Environment, actual))
 }
 
 func TestVirtualNetworksAreInDifferentRegions(t *testing.T) {
 	t.Parallel()
+	tfState := NewTerraformState(t, "networking_hub")
+	vNets := tfState.GetVNets()
 
-	test := prepareTestTable()
+	var locations []string
+	for _, vnet := range vNets {
+		vn, err := azure.GetVirtualNetworkE(vnet.GetName(), vnet.GetString("resource_group_name"), tfState.SubscriptionID)
+		require.NoError(t, err)
 
-	vnet1, _ := azure.GetVirtualNetworkE(fmt.Sprintf("%s-vnet-hub-re1", test.Prefix), fmt.Sprintf("%s-rg-vnet-hub-re1", test.Prefix), test.SubscriptionID)
+		locations = append(locations, *vn.Location)
+	}
 
-	vnet2, _ := azure.GetVirtualNetworkE(fmt.Sprintf("%s-vnet-hub-re2", test.Prefix), fmt.Sprintf("%s-rg-vnet-hub-re2", test.Prefix), test.SubscriptionID)
-
-	assert.NotEqual(t, *vnet1.Location, *vnet2.Location, "Virtual Networks in the 'landingzone=networking_hub' resource groups should provisioned in different regions")
+	assert.NotEqual(t, locations[0], locations[1], fmt.Sprintf("Virtual Networks in the 'landingzone=%s' resource groups should provisioned in different regions", tfState.GetLandingZoneKey()))
 }
 
 func TestBastionSubNetSecurityRulesCount(t *testing.T) {
 	t.Parallel()
 
-	test := prepareTestTable()
+	tfState := NewTerraformState(t, "networking_hub")
+	vNets := tfState.GetVNets()
 
-	for iLoop := 1; iLoop <= 2; iLoop++ {
-		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-AzureBastionSubnet", test.Prefix), test.SubscriptionID)
+	for _, vnet := range vNets {
+		prefix := strings.Split(vnet.GetString("resource_group_name"), "-")
+		rules := azure.GetAllNSGRules(t, vnet.GetString("resource_group_name"), fmt.Sprintf("%s-nsg-AzureBastionSubnet", prefix[0]), tfState.SubscriptionID)
 
 		assert.Equal(t, 12, len(rules.SummarizedRules), fmt.Sprintf("Bastion Subnet should have 12 rules, found %d", len(rules.SummarizedRules)))
 	}
@@ -60,138 +64,165 @@ func TestBastionSubNetSecurityRulesCount(t *testing.T) {
 
 func TestBastionSubNetInboundSecurityRules(t *testing.T) {
 	t.Parallel()
+	expected_port_rage := []string{"*", "*", "*", "4443", "443", "135"}
 
-	test := prepareTestTable()
+	tfState := NewTerraformState(t, "networking_hub")
+	vNets := tfState.GetVNets()
 
-	for iLoop := 1; iLoop <= 2; iLoop++ {
-		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-AzureBastionSubnet", test.Prefix), test.SubscriptionID)
-		actual := make([]string, 0)
+	for _, vnet := range vNets {
+		prefix := strings.Split(vnet.GetString("resource_group_name"), "-")
+		rules := azure.GetAllNSGRules(t, vnet.GetString("resource_group_name"), fmt.Sprintf("%s-nsg-AzureBastionSubnet", prefix[0]), tfState.SubscriptionID)
+		var actual_port_rage []string
 
 		for _, rule := range rules.SummarizedRules {
 			if rule.Direction == "Inbound" {
-				actual = append(actual, rule.DestinationPortRange)
+				actual_port_rage = append(actual_port_rage, rule.DestinationPortRange)
 			}
 		}
 
-		assert.ElementsMatch(t, test.Config.BastionInboundRules, actual, fmt.Sprintf("Bastion Subnet doesn't have expected destination ports: %+q", test.Config.BastionInboundRules))
+		assert.ElementsMatch(t, expected_port_rage, actual_port_rage, fmt.Sprintf("Bastion Subnet doesn't have expected destination ports: %+q", expected_port_rage))
 	}
 }
 
 func TestBastionSubNetOutboundSecurityRules(t *testing.T) {
 	t.Parallel()
 
-	test := prepareTestTable()
+	expected_port_rage := []string{"*", "*", "*", "443", "3389", "22"}
 
-	for iLoop := 1; iLoop <= 2; iLoop++ {
-		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-AzureBastionSubnet", test.Prefix), test.SubscriptionID)
-		actual := make([]string, 0)
+	tfState := NewTerraformState(t, "networking_hub")
+	vNets := tfState.GetVNets()
+
+	for _, vnet := range vNets {
+		prefix := strings.Split(vnet.GetString("resource_group_name"), "-")
+		rules := azure.GetAllNSGRules(t, vnet.GetString("resource_group_name"), fmt.Sprintf("%s-nsg-AzureBastionSubnet", prefix[0]), tfState.SubscriptionID)
+		var actual_port_rage []string
 
 		for _, rule := range rules.SummarizedRules {
 			if rule.Direction == "Outbound" {
-				actual = append(actual, rule.DestinationPortRange)
+				actual_port_rage = append(actual_port_rage, rule.DestinationPortRange)
 			}
 		}
 
-		assert.ElementsMatch(t, test.Config.BastionOutboundRules, actual, fmt.Sprintf("Bastion Subnet doesn't have expected destination ports: %+q", test.Config.BastionOutboundRules))
+		assert.ElementsMatch(t, expected_port_rage, actual_port_rage, fmt.Sprintf("Bastion Subnet doesn't have expected destination ports: %+q", expected_port_rage))
 	}
 }
 
 func TestJumpboxSecurityRulesCount(t *testing.T) {
 	t.Parallel()
 
-	test := prepareTestTable()
+	tfState := NewTerraformState(t, "networking_hub")
+	vNets := tfState.GetVNets()
 
-	for iLoop := 1; iLoop <= 2; iLoop++ {
-		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-jumpbox", test.Prefix), test.SubscriptionID)
+	for _, vnet := range vNets {
+		prefix := strings.Split(vnet.GetString("resource_group_name"), "-")
+		rules := azure.GetAllNSGRules(t, vnet.GetString("resource_group_name"), fmt.Sprintf("%s-nsg-jumpbox", prefix[0]), tfState.SubscriptionID)
 
-		assert.Equal(t, 7, len(rules.SummarizedRules), fmt.Sprintf("Jumpbox should have 7 rules, found %d", len(rules.SummarizedRules)))
+		assert.Equal(t, 7, len(rules.SummarizedRules), fmt.Sprintf("Jumpbox Subnet should have 7 rules, found %d", len(rules.SummarizedRules)))
 	}
 }
 
 func TestJumpboxInboundSecurityRules(t *testing.T) {
 	t.Parallel()
 
-	test := prepareTestTable()
+	expected_port_rage := []string{"*", "*", "*", "22"}
 
-	for iLoop := 1; iLoop <= 2; iLoop++ {
-		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-jumpbox", test.Prefix), test.SubscriptionID)
-		actual := make([]string, 0)
+	tfState := NewTerraformState(t, "networking_hub")
+	vNets := tfState.GetVNets()
+
+	for _, vnet := range vNets {
+		prefix := strings.Split(vnet.GetString("resource_group_name"), "-")
+		rules := azure.GetAllNSGRules(t, vnet.GetString("resource_group_name"), fmt.Sprintf("%s-nsg-jumpbox", prefix[0]), tfState.SubscriptionID)
+		var actual_port_rage []string
 
 		for _, rule := range rules.SummarizedRules {
 			if rule.Direction == "Inbound" {
-				actual = append(actual, rule.DestinationPortRange)
+				actual_port_rage = append(actual_port_rage, rule.DestinationPortRange)
 			}
 		}
 
-		assert.ElementsMatch(t, test.Config.JumpboxInboundRules, actual, fmt.Sprintf("Jumpbox doesn't have expected destination ports: %+q", test.Config.JumpboxInboundRules))
+		assert.ElementsMatch(t, expected_port_rage, actual_port_rage, fmt.Sprintf("Jumpbox Subnet doesn't have expected destination ports: %+q", expected_port_rage))
 	}
 }
 
 func TestJumpboxOutboundSecurityRules(t *testing.T) {
 	t.Parallel()
 
-	test := prepareTestTable()
+	expected_port_rage := []string{"*", "*", "*"}
 
-	for iLoop := 1; iLoop <= 2; iLoop++ {
-		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-jumpbox", test.Prefix), test.SubscriptionID)
-		actual := make([]string, 0)
+	tfState := NewTerraformState(t, "networking_hub")
+	vNets := tfState.GetVNets()
+
+	for _, vnet := range vNets {
+		prefix := strings.Split(vnet.GetString("resource_group_name"), "-")
+		rules := azure.GetAllNSGRules(t, vnet.GetString("resource_group_name"), fmt.Sprintf("%s-nsg-jumpbox", prefix[0]), tfState.SubscriptionID)
+		var actual_port_rage []string
 
 		for _, rule := range rules.SummarizedRules {
 			if rule.Direction == "Outbound" {
-				actual = append(actual, rule.DestinationPortRange)
+				actual_port_rage = append(actual_port_rage, rule.DestinationPortRange)
 			}
 		}
 
-		assert.ElementsMatch(t, test.Config.JumpboxOutboundRules, actual, fmt.Sprintf("Jumpbox doesn't have expected destination ports: %+q", test.Config.JumpboxOutboundRules))
+		assert.ElementsMatch(t, expected_port_rage, actual_port_rage, fmt.Sprintf("Jumpbox Subnet doesn't have expected destination ports: %+q", expected_port_rage))
 	}
 }
 
 func TestPrivateEndpointsSecurityRulesCount(t *testing.T) {
 	t.Parallel()
 
-	test := prepareTestTable()
+	tfState := NewTerraformState(t, "networking_hub")
+	vNets := tfState.GetVNets()
 
-	for iLoop := 1; iLoop <= 2; iLoop++ {
-		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-private_endpoints", test.Prefix), test.SubscriptionID)
+	for _, vnet := range vNets {
+		prefix := strings.Split(vnet.GetString("resource_group_name"), "-")
+		rules := azure.GetAllNSGRules(t, vnet.GetString("resource_group_name"), fmt.Sprintf("%s-nsg-private_endpoints", prefix[0]), tfState.SubscriptionID)
 
-		assert.Equal(t, 6, len(rules.SummarizedRules), fmt.Sprintf("Private Endpoints should have 6 rules, found %d", len(rules.SummarizedRules)))
+		assert.Equal(t, 6, len(rules.SummarizedRules), fmt.Sprintf("private_endpoints Subnet should have 6 rules, found %d", len(rules.SummarizedRules)))
 	}
 }
 
 func TestPrivateEndpointsInboundSecurityRules(t *testing.T) {
 	t.Parallel()
 
-	test := prepareTestTable()
+	expected_port_rage := []string{"*", "*", "*"}
 
-	for iLoop := 1; iLoop <= 2; iLoop++ {
-		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-private_endpoints", test.Prefix), test.SubscriptionID)
-		actual := make([]string, 0)
+	tfState := NewTerraformState(t, "networking_hub")
+	vNets := tfState.GetVNets()
+
+	for _, vnet := range vNets {
+		prefix := strings.Split(vnet.GetString("resource_group_name"), "-")
+		rules := azure.GetAllNSGRules(t, vnet.GetString("resource_group_name"), fmt.Sprintf("%s-nsg-private_endpoints", prefix[0]), tfState.SubscriptionID)
+		var actual_port_rage []string
 
 		for _, rule := range rules.SummarizedRules {
 			if rule.Direction == "Inbound" {
-				actual = append(actual, rule.DestinationPortRange)
+				actual_port_rage = append(actual_port_rage, rule.DestinationPortRange)
 			}
 		}
 
-		assert.ElementsMatch(t, test.Config.PrivateEndpointsInboundRules, actual, fmt.Sprintf("PrivateEndpoints doesn't have expected destination ports: %+q", test.Config.PrivateEndpointsInboundRules))
+		assert.ElementsMatch(t, expected_port_rage, actual_port_rage, fmt.Sprintf("PrivateEndpoints Subnet doesn't have expected destination ports: %+q", expected_port_rage))
 	}
 }
 
 func TestPrivateEndpointsOutboundSecurityRules(t *testing.T) {
 	t.Parallel()
 
-	test := prepareTestTable()
+	expected_port_rage := []string{"*", "*", "*"}
 
-	for iLoop := 1; iLoop <= 2; iLoop++ {
-		rules := azure.GetAllNSGRules(t, fmt.Sprintf("%s-rg-vnet-hub-re%d", test.Prefix, iLoop), fmt.Sprintf("%s-nsg-private_endpoints", test.Prefix), test.SubscriptionID)
-		actual := make([]string, 0)
+	tfState := NewTerraformState(t, "networking_hub")
+	vNets := tfState.GetVNets()
+
+	for _, vnet := range vNets {
+		prefix := strings.Split(vnet.GetString("resource_group_name"), "-")
+		rules := azure.GetAllNSGRules(t, vnet.GetString("resource_group_name"), fmt.Sprintf("%s-nsg-private_endpoints", prefix[0]), tfState.SubscriptionID)
+		var actual_port_rage []string
 
 		for _, rule := range rules.SummarizedRules {
 			if rule.Direction == "Outbound" {
-				actual = append(actual, rule.DestinationPortRange)
+				actual_port_rage = append(actual_port_rage, rule.DestinationPortRange)
 			}
 		}
 
-		assert.ElementsMatch(t, test.Config.PrivateEndpointsOutboundRules, actual, fmt.Sprintf("PrivateEndpoints doesn't have expected destination ports: %+q", test.Config.PrivateEndpointsOutboundRules))
+		assert.ElementsMatch(t, expected_port_rage, actual_port_rage, fmt.Sprintf("PrivateEndpoints Subnet doesn't have expected destination ports: %+q", expected_port_rage))
 	}
 }

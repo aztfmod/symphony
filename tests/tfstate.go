@@ -20,6 +20,7 @@ type ResourceGroups = map[string](AzureResource)
 type KeyVaults = map[string](AzureResource)
 type StorageAccounts = map[string](AzureResource)
 type RecoveryVaults = map[string](AzureResource)
+type VNets = map[string](AzureResource)
 
 type TerraFormState struct {
 	Objects        Resource
@@ -138,6 +139,17 @@ func (tfState TerraFormState) GetStorageAccountByResourceGroup(resourceGroup str
 		}
 	}
 	return *NewAzureResource(nil), errors.New("Storage Account not found")
+}
+
+func (tfState TerraFormState) GetVNets() VNets {
+	resourceList := tfState.Objects[tfState.Key].(Resource)
+	vNets := resourceList["vnets"].(Resource)
+	var m VNets = make(VNets)
+	for key, vNet := range vNets {
+		vn := vNet.(Resource)
+		m[key] = *NewAzureResource(vn)
+	}
+	return m
 }
 
 func NewAzureResource(resource Resource) *AzureResource {
