@@ -3,7 +3,6 @@
 package caf_tests
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
@@ -11,16 +10,36 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAKSClusterAgentCount(t *testing.T) {
+func TestAKSClusterExists(t *testing.T) {
 	t.Parallel()
 
-	test := prepareTestTable()
-	expectedClusterName := fmt.Sprintf("%s-aks-akscluster-re1-001", test.Prefix)
-	expectedResourceGroupName := fmt.Sprintf("%s-rg-aks-re1", test.Prefix)
+	tfState := NewTerraformState(t, "cluster_aks")
+	clusters := tfState.GetAKSClusters()
+
+	for _, cluster := range clusters {
+		name := cluster.GetString("cluster_name")
+		resourceGroupName := cluster.GetString("resource_group_name")
+
+		cluster, err := azure.GetManagedClusterE(t, resourceGroupName, name, tfState.SubscriptionID)
+		require.NoError(t, err)
+		assert.NotNil(t, cluster)
+	}
+}
+
+func TestAKSClusterOnlyOneAgentCount(t *testing.T) {
+	t.Parallel()
+
+	tfState := NewTerraformState(t, "cluster_aks")
+	clusters := tfState.GetAKSClusters()
 	expectedAgentCount := 1
 
-	cluster, err := azure.GetManagedClusterE(t, expectedResourceGroupName, expectedClusterName, "")
-	require.NoError(t, err)
-	actualCount := *(*cluster.ManagedClusterProperties.AgentPoolProfiles)[0].Count
-	assert.Equal(t, int32(expectedAgentCount), actualCount)
+	for _, cluster := range clusters {
+		name := cluster.GetString("cluster_name")
+		resourceGroupName := cluster.GetString("resource_group_name")
+
+		cluster, err := azure.GetManagedClusterE(t, resourceGroupName, name, tfState.SubscriptionID)
+		require.NoError(t, err)
+		actualCount := *(*cluster.ManagedClusterProperties.AgentPoolProfiles)[0].Count
+		assert.Equal(t, int32(expectedAgentCount), actualCount)
+	}
 }

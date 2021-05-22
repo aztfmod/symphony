@@ -21,6 +21,7 @@ type KeyVaults = map[string](AzureResource)
 type StorageAccounts = map[string](AzureResource)
 type RecoveryVaults = map[string](AzureResource)
 type VNets = map[string](AzureResource)
+type AKSClusters = map[string](AzureResource)
 
 type TerraFormState struct {
 	Objects        Resource
@@ -32,8 +33,8 @@ type TerraFormState struct {
 var TfState TerraFormState
 
 func NewTerraformState(t *testing.T, key string) *TerraFormState {
-	tfState := new(TerraFormState)
 	os.Unsetenv("TF_DATA_DIR")
+	tfState := new(TerraFormState)
 	options := &terraform.Options{
 		TerraformDir: os.Getenv("STATE_FILE_PATH"),
 	}
@@ -150,6 +151,17 @@ func (tfState TerraFormState) GetVNets() VNets {
 		m[key] = *NewAzureResource(vn)
 	}
 	return m
+}
+
+func (tfState TerraFormState) GetAKSClusters() AKSClusters {
+	resourceList := tfState.Objects[tfState.Key].(Resource)
+	clusters := resourceList["aks_clusters"].(Resource)
+	azureResourceClusters := make(AKSClusters)
+	for key, item := range clusters {
+		rv := item.(Resource)
+		azureResourceClusters[key] = *NewAzureResource(rv)
+	}
+	return azureResourceClusters
 }
 
 func NewAzureResource(resource Resource) *AzureResource {
