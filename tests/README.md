@@ -42,15 +42,39 @@ In case of an issue, run the following command to make sure all the dependencies
 go mod tidy
 ```
 
-Ensure your bash env has gcc installed. If not then install with the following commands
-```bash
-sudo apt-get update
-sudo apt-get upgrade
-sudo apt install build-essential
+There are two options for running the tests.
+
+### Option 1 - rover
+
+Run the rover test command:
+
+```shell
+rover test \
+      -b <path to tests folder> \
+      -env <environment name> \
+      -level <level> \
+      -tfstate <name of deployed state file> \
+      -d
 ```
 
-To run the tests, execute the following command;
+### Option 2 - Debugging or cli invocation of go test
 
-Invoke the tests via the provided bash script. `./run_tests.sh -e demo -d`
+- Download your state file from azure blob storage.
+- Rename the file to terraform.tfstate and place it in a known location.
+- create a .env file in the tests folder with the following structure
 
-run_tests.sh is invoked with -e to specify the environment name. In this case we are using demo because that is what is specified in local.sh
+```shell
+ STATE_FILE_PATH=<path to state file>
+ ENVIRONMENT=<deployed caf environment>
+ ARM_SUBSCRIPTION_ID=<subscription id>
+```
+
+Note: if running through rover, you don't have to set these as rover test exports the values.
+
+When running through go test you must specifiy the build tag and ensure that the correct state file is loaded into STATE_FILE_PATH.
+
+eg
+`go test -tags level0 -v
+`
+
+You can only test one level at a time.
