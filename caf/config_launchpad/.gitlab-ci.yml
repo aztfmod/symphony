@@ -1,44 +1,54 @@
+variables:
+  environment: 'glprod'
+  action: 'apply'
+  application: 'argocd'
+  landingzone_key : 'cluster_aks'
+  cluster_key: 'cluster_re1'
+  group_url: 'https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_NAMESPACE}'
+
 #####################################################################
-# Launchpad Deployment
+# APP Deployment
 #####################################################################
 
-# Done manually since Owner role in the Azure Subscription is needed.
-# Creates MSIs with permission for GitLab runners.
+stages:
+  - validate_level0
+  - launchpad
 
-################### Rover manual implementation  ###################
+validate_level0:
+  stage: validate_level0
+  tags:
+    - gitlab-runner-1
+  script:
+    - |
+      echo "pwd=$(pwd)"
+      echo "--------"
+      env
 
-# rover -lz /workspaces/symphony/caf/caf_modules/landingzones/caf_launchpad \
-#   -launchpad \
-#   -var-folder /workspaces/symphony/caf/config_launchpad/level0/launchpad \
-#   -parallelism 30 \
-#   -level level0 \
-#   -env demo \
-#   -a apply
+      git clone ${group_url}/caf_modules.git
 
-################### Pipeline implementation ###################
-# variables:
-#   environment: 'demo'
-#   action: 'apply'
-#   group_url: 'https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_NAMESPACE}'
+      az login --identity --username ${MSI_ID}
 
-# stages:
-#   - launchpad
+      /tf/rover/rover.sh ci \
+        -sc ${CI_PROJECT_DIR}/symphony.yml \
+        -b ${CI_PROJECT_DIR} \
+        -l level0 \
+        -env ${environment} \
+        -d
 
-# launchpad:
-#   stage: launchpad
-#   tags:
-#     - gitlab-runner-0
-#   script:
-#     - |
-#       env
-#       git clone ${group_url}/caf_modules.git
+launchpad:
+  stage: launchpad
+  tags:
+    - gitlab-runner-0
+  script:
+    - |
+      git clone ${group_url}/caf_modules.git
 
-#       az login --identity --username ${MSI_ID_01}
+      az login --identity --username ${MSI_ID_00}
 
-#       /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules/landingzones/caf_launchpad \
-#         -launchpad \
-#         -var-folder ${CI_PROJECT_DIR}/level0/launchpad \
-#         -parallelism 30 \
-#         -level level0 \
-#         -env ${environment} \
-#         -a ${action}
+      /tf/rover/rover.sh -lz ${CI_PROJECT_DIR}/caf_modules/landingzones/caf_launchpad \
+      -launchpad \
+      -var-folder ${CI_PROJECT_DIR}/level0/launchpad \
+      -parallelism 30 \
+      -level level0 \
+      -env ${caf_environment} \
+      -a apply
