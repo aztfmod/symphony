@@ -1,32 +1,45 @@
+// +build level1
+
 package caf_tests
 
 import (
-	"context"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFoundationResourceGroupsDoesNotExist(t *testing.T) {
+func TestFoundationsLandingZoneKey(t *testing.T) {
+	//arrange
 	t.Parallel()
+	tfState := NewTerraformState(t, "caf_foundations")
 
-	test := prepareTestTable()
+	//act
+	landingZoneKey := tfState.GetLandingZoneKey()
 
-	client, _ := azure.GetResourceGroupClientE(test.SubscriptionID)
+	//assert
+	assert.Equal(t, "caf_foundations", landingZoneKey)
+}
 
-	result, _ := client.List(context.Background(), "tagName eq 'level' and tagValue eq 'level1'", nil)
+func TestFoundationClientConfigSubscriptionId(t *testing.T) {
+	//arrange
+	t.Parallel()
+	tfState := NewTerraformState(t, "caf_foundations")
 
-	rgList := result.Values()
+	//act
+	client_config := tfState.GetClientConfig()
 
-	actual := 0
-	for _, rg := range rgList {
-		if *rg.Tags["environment"] == test.Environment {
-			actual++
-		}
-	}
+	//assert
+	assert.Equal(t, tfState.SubscriptionID, client_config["subscription_id"].(string))
+}
 
-	expected := 1
+func TestFoundationGlobalSettingsEnvironment(t *testing.T) {
+	//arrange
+	t.Parallel()
+	tfState := NewTerraformState(t, "caf_foundations")
 
-	assert.Equal(t, expected, actual, "Resource Group count does not match")
+	//act
+	global_settings := tfState.GetGlobalSettings()
+
+	//assert
+	assert.Equal(t, tfState.Environment, global_settings["environment"].(string))
 }
