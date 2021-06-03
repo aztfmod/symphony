@@ -24,7 +24,6 @@ levels:
   - stack: launchpad
     landingZonePath: symphony/caf/caf_modules/landingzones/caf_launchpad/
     configurationPath: symphony/caf/config_launchpad/level0/launchpad/
-    tfState: caf_launchpad.tfstate 
   launchpad: true
 - level: level1
   type: platform
