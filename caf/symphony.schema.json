@@ -1,0 +1,366 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "environment": {
+      "type": "string"
+    },
+    "repositories": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "uri": {
+              "type": "string"
+            },
+            "branch": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "uri",
+            "branch"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "uri": {
+              "type": "string"
+            },
+            "branch": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "uri",
+            "branch"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "uri": {
+              "type": "string"
+            },
+            "branch": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "uri",
+            "branch"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "uri": {
+              "type": "string"
+            },
+            "branch": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "uri",
+            "branch"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "uri": {
+              "type": "string"
+            },
+            "branch": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "uri",
+            "branch"
+          ]
+        }
+      ]
+    },
+    "levels": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "stacks": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "stack": {
+                      "type": "string"
+                    },
+                    "landingZonePath": {
+                      "type": "string"
+                    },
+                    "configurationPath": {
+                      "type": "string"
+                    },
+                    "tfState": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "stack",
+                    "landingZonePath",
+                    "configurationPath",
+                    "tfState"
+                  ]
+                }
+              ]
+            },
+            "launchpad": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "level",
+            "type",
+            "stacks",
+            "launchpad"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "stacks": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "stack": {
+                      "type": "string"
+                    },
+                    "landingZonePath": {
+                      "type": "string"
+                    },
+                    "configurationPath": {
+                      "type": "string"
+                    },
+                    "tfState": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "stack",
+                    "landingZonePath",
+                    "configurationPath",
+                    "tfState"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "level",
+            "type",
+            "stacks"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "stacks": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "stack": {
+                      "type": "string"
+                    },
+                    "landingZonePath": {
+                      "type": "string"
+                    },
+                    "configurationPath": {
+                      "type": "string"
+                    },
+                    "tfState": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "stack",
+                    "landingZonePath",
+                    "configurationPath",
+                    "tfState"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "stack": {
+                      "type": "string"
+                    },
+                    "landingZonePath": {
+                      "type": "string"
+                    },
+                    "configurationPath": {
+                      "type": "string"
+                    },
+                    "tfState": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "stack",
+                    "landingZonePath",
+                    "configurationPath",
+                    "tfState"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "level",
+            "type",
+            "stacks"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "stacks": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "stack": {
+                      "type": "string"
+                    },
+                    "landingZonePath": {
+                      "type": "string"
+                    },
+                    "configurationPath": {
+                      "type": "string"
+                    },
+                    "tfState": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "stack",
+                    "landingZonePath",
+                    "configurationPath",
+                    "tfState"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "level",
+            "type",
+            "stacks"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "stacks": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "stack": {
+                      "type": "string"
+                    },
+                    "landingZonePath": {
+                      "type": "string"
+                    },
+                    "configurationPath": {
+                      "type": "string"
+                    },
+                    "tfState": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "stack",
+                    "landingZonePath",
+                    "configurationPath",
+                    "tfState"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "level",
+            "type",
+            "stacks"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "environment",
+    "repositories",
+    "levels"
+  ]
+}
