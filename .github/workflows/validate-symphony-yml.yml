@@ -1,0 +1,20 @@
+name: Validate Symphony yaml
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Dependencies
+      run: |
+        sudo pip3 install json-spec
+        sudo pip3 install yq
+
+    - name: Validate Symphony Yaml File
+      run: |
+        json=$(yq '' caf/symphony.yml) && json validate --schema-file=caf/symphony.schema.json --document-json="$json"                  
