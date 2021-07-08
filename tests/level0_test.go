@@ -7,17 +7,17 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gruntwork-io/terratest/modules/azure"
-
 	"testing"
 
+	"github.com/aztfmod/terratest-helper-caf/state"
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLaunchpadLandingZoneKey(t *testing.T) {
 	//arrange
 	t.Parallel()
-	tfState := NewTerraformState(t, "launchpad")
+	tfState := state.NewTerraformState(t, "launchpad")
 
 	//act
 	landingZoneKey := tfState.GetLandingZoneKey()
@@ -28,7 +28,7 @@ func TestLaunchpadLandingZoneKey(t *testing.T) {
 
 func TestLaunchpadResourceGroupIsExists(t *testing.T) {
 	t.Parallel()
-	tfState := NewTerraformState(t, "launchpad")
+	tfState := state.NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
 	for _, resourceGroup := range resourceGroups {
@@ -40,7 +40,7 @@ func TestLaunchpadResourceGroupIsExists(t *testing.T) {
 
 func TestLaunchpadResourceGroupIsExistsViaClient(t *testing.T) {
 	t.Parallel()
-	tfState := NewTerraformState(t, "launchpad")
+	tfState := state.NewTerraformState(t, "launchpad")
 	client, _ := azure.GetResourceGroupClientE(tfState.SubscriptionID)
 	resourceGroups := tfState.GetResourceGroups()
 
@@ -54,16 +54,14 @@ func TestLaunchpadResourceGroupIsExistsViaClient(t *testing.T) {
 func TestLaunchpadResourceGroupHasTags(t *testing.T) {
 	//arrange
 	t.Parallel()
-	tfState := NewTerraformState(t, "launchpad")
-	client, _ := azure.GetResourceGroupClientE(tfState.SubscriptionID)
+	tfState := state.NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
 	for _, resourceGroup := range resourceGroups {
 		rgName := resourceGroup.GetName()
 		level := resourceGroup.GetLevel()
 
-		rg, errRG := client.Get(context.Background(), rgName)
-		assert.NoError(t, errRG, fmt.Sprintf("ResourceGroup (%s) couldn't read", rgName))
+		rg := azure.GetAResourceGroup(t, rgName, tfState.SubscriptionID)
 
 		assert.Equal(t, tfState.Environment, *rg.Tags["environment"], "Environment Tag is not correct")
 		assert.Equal(t, "launchpad", *rg.Tags["landingzone"], "LandingZone Tag is not correct")
@@ -74,7 +72,7 @@ func TestLaunchpadResourceGroupHasTags(t *testing.T) {
 func TestLaunchpadResourceGroupHasKeyVault(t *testing.T) {
 	//arrange
 	t.Parallel()
-	tfState := NewTerraformState(t, "launchpad")
+	tfState := state.NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
 	for _, resourceGroup := range resourceGroups {
@@ -98,7 +96,7 @@ func TestLaunchpadResourceGroupHasKeyVault(t *testing.T) {
 
 func TestLaunchpadKeyVaultHasTags(t *testing.T) {
 	t.Parallel()
-	tfState := NewTerraformState(t, "launchpad")
+	tfState := state.NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
 	for _, resourceGroup := range resourceGroups {
@@ -128,7 +126,7 @@ func TestLaunchpadKeyVaultHasTags(t *testing.T) {
 
 func TestLaunchpadResourceGroupHasStorageAccount(t *testing.T) {
 	t.Parallel()
-	tfState := NewTerraformState(t, "launchpad")
+	tfState := state.NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
 	for _, resourceGroup := range resourceGroups {
@@ -153,7 +151,7 @@ func TestLaunchpadResourceGroupHasStorageAccount(t *testing.T) {
 
 func TestLaunchpadStorageAccountHasTags(t *testing.T) {
 	t.Parallel()
-	tfState := NewTerraformState(t, "launchpad")
+	tfState := state.NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
 	for _, resourceGroup := range resourceGroups {
@@ -184,7 +182,7 @@ func TestLaunchpadStorageAccountHasTags(t *testing.T) {
 
 func TestLaunchpadStorageAccountHasTFStateContainer(t *testing.T) {
 	t.Parallel()
-	tfState := NewTerraformState(t, "launchpad")
+	tfState := state.NewTerraformState(t, "launchpad")
 	resourceGroups := tfState.GetResourceGroups()
 
 	for _, resourceGroup := range resourceGroups {

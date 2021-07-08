@@ -3,6 +3,7 @@
 
 export CAF_DIR=$(pwd)
 export caf_environment=demo
+export ROVER_RUNNER=true
 
 # Local launchpad deployment
 
