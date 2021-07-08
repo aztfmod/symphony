@@ -5,6 +5,7 @@ package caf_tests
 import (
 	"testing"
 
+	"github.com/aztfmod/terratest-helper-caf/state"
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,7 +14,7 @@ import (
 func TestAKSClusterExists(t *testing.T) {
 	t.Parallel()
 
-	tfState := NewTerraformState(t, "cluster_aks")
+	tfState := state.NewTerraformState(t, "cluster_aks")
 	clusters := tfState.GetAKSClusters()
 
 	for _, cluster := range clusters {
@@ -29,7 +30,7 @@ func TestAKSClusterExists(t *testing.T) {
 func TestAKSClusterOnlyOneAgentCount(t *testing.T) {
 	t.Parallel()
 
-	tfState := NewTerraformState(t, "cluster_aks")
+	tfState := state.NewTerraformState(t, "cluster_aks")
 	clusters := tfState.GetAKSClusters()
 	expectedAgentCount := 1
 

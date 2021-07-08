@@ -3,11 +3,11 @@
 package caf_tests
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/aztfmod/terratest-helper-caf/state"
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,15 +16,13 @@ import (
 func TestThereAreTwoResourceGroupsForNetworkingHub(t *testing.T) {
 	t.Parallel()
 
-	tfState := NewTerraformState(t, "networking_hub")
+	tfState := state.NewTerraformState(t, "networking_hub")
 	resourceGroups := tfState.GetResourceGroups()
-	client, _ := azure.GetResourceGroupClientE(tfState.SubscriptionID)
 
 	for _, resourceGroup := range resourceGroups {
 		name := resourceGroup.GetName()
 
-		actual_rc, err := client.Get(context.Background(), name)
-		require.NoError(t, err)
+		actual_rc := azure.GetAResourceGroup(t, name, tfState.SubscriptionID)
 
 		assert.Equal(t, *actual_rc.Tags["landingzone"], tfState.GetLandingZoneKey())
 		assert.Equal(t, *actual_rc.Tags["environment"], tfState.Environment)
@@ -34,7 +32,7 @@ func TestThereAreTwoResourceGroupsForNetworkingHub(t *testing.T) {
 
 func TestVirtualNetworksAreInDifferentRegions(t *testing.T) {
 	t.Parallel()
-	tfState := NewTerraformState(t, "networking_hub")
+	tfState := state.NewTerraformState(t, "networking_hub")
 	vNets := tfState.GetVNets()
 
 	var locations []string
@@ -51,7 +49,7 @@ func TestVirtualNetworksAreInDifferentRegions(t *testing.T) {
 func TestBastionSubNetSecurityRulesCount(t *testing.T) {
 	t.Parallel()
 
-	tfState := NewTerraformState(t, "networking_hub")
+	tfState := state.NewTerraformState(t, "networking_hub")
 	vNets := tfState.GetVNets()
 
 	for _, vnet := range vNets {
@@ -66,7 +64,7 @@ func TestBastionSubNetInboundSecurityRules(t *testing.T) {
 	t.Parallel()
 	expected_port_rage := []string{"*", "*", "*", "4443", "443", "135"}
 
-	tfState := NewTerraformState(t, "networking_hub")
+	tfState := state.NewTerraformState(t, "networking_hub")
 	vNets := tfState.GetVNets()
 
 	for _, vnet := range vNets {
@@ -89,7 +87,7 @@ func TestBastionSubNetOutboundSecurityRules(t *testing.T) {
 
 	expected_port_rage := []string{"*", "*", "*", "443", "3389", "22"}
 
-	tfState := NewTerraformState(t, "networking_hub")
+	tfState := state.NewTerraformState(t, "networking_hub")
 	vNets := tfState.GetVNets()
 
 	for _, vnet := range vNets {
@@ -110,7 +108,7 @@ func TestBastionSubNetOutboundSecurityRules(t *testing.T) {
 func TestJumpboxSecurityRulesCount(t *testing.T) {
 	t.Parallel()
 
-	tfState := NewTerraformState(t, "networking_hub")
+	tfState := state.NewTerraformState(t, "networking_hub")
 	vNets := tfState.GetVNets()
 
 	for _, vnet := range vNets {
@@ -126,7 +124,7 @@ func TestJumpboxInboundSecurityRules(t *testing.T) {
 
 	expected_port_rage := []string{"*", "*", "*", "22"}
 
-	tfState := NewTerraformState(t, "networking_hub")
+	tfState := state.NewTerraformState(t, "networking_hub")
 	vNets := tfState.GetVNets()
 
 	for _, vnet := range vNets {
@@ -149,7 +147,7 @@ func TestJumpboxOutboundSecurityRules(t *testing.T) {
 
 	expected_port_rage := []string{"*", "*", "*"}
 
-	tfState := NewTerraformState(t, "networking_hub")
+	tfState := state.NewTerraformState(t, "networking_hub")
 	vNets := tfState.GetVNets()
 
 	for _, vnet := range vNets {
@@ -170,7 +168,7 @@ func TestJumpboxOutboundSecurityRules(t *testing.T) {
 func TestPrivateEndpointsSecurityRulesCount(t *testing.T) {
 	t.Parallel()
 
-	tfState := NewTerraformState(t, "networking_hub")
+	tfState := state.NewTerraformState(t, "networking_hub")
 	vNets := tfState.GetVNets()
 
 	for _, vnet := range vNets {
@@ -186,7 +184,7 @@ func TestPrivateEndpointsInboundSecurityRules(t *testing.T) {
 
 	expected_port_rage := []string{"*", "*", "*"}
 
-	tfState := NewTerraformState(t, "networking_hub")
+	tfState := state.NewTerraformState(t, "networking_hub")
 	vNets := tfState.GetVNets()
 
 	for _, vnet := range vNets {
@@ -209,7 +207,7 @@ func TestPrivateEndpointsOutboundSecurityRules(t *testing.T) {
 
 	expected_port_rage := []string{"*", "*", "*"}
 
-	tfState := NewTerraformState(t, "networking_hub")
+	tfState := state.NewTerraformState(t, "networking_hub")
 	vNets := tfState.GetVNets()
 
 	for _, vnet := range vNets {

@@ -5,13 +5,14 @@ package caf_tests
 import (
 	"testing"
 
+	"github.com/aztfmod/terratest-helper-caf/state"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFoundationsLandingZoneKey(t *testing.T) {
 	//arrange
 	t.Parallel()
-	tfState := NewTerraformState(t, "caf_foundations")
+	tfState := state.NewTerraformState(t, "caf_foundations")
 
 	//act
 	landingZoneKey := tfState.GetLandingZoneKey()
@@ -23,7 +24,7 @@ func TestFoundationsLandingZoneKey(t *testing.T) {
 func TestFoundationClientConfigSubscriptionId(t *testing.T) {
 	//arrange
 	t.Parallel()
-	tfState := NewTerraformState(t, "caf_foundations")
+	tfState := state.NewTerraformState(t, "caf_foundations")
 
 	//act
 	client_config := tfState.GetClientConfig()
@@ -35,7 +36,7 @@ func TestFoundationClientConfigSubscriptionId(t *testing.T) {
 func TestFoundationGlobalSettingsEnvironment(t *testing.T) {
 	//arrange
 	t.Parallel()
-	tfState := NewTerraformState(t, "caf_foundations")
+	tfState := state.NewTerraformState(t, "caf_foundations")
 
 	//act
 	global_settings := tfState.GetGlobalSettings()

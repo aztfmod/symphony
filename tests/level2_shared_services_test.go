@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aztfmod/terratest-helper-caf/state"
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +15,7 @@ import (
 func TestSharedServicesLandingZoneKey(t *testing.T) {
 	//arrange
 	t.Parallel()
-	tfState := NewTerraformState(t, "shared_services")
+	tfState := state.NewTerraformState(t, "shared_services")
 
 	//act
 	landingZoneKey := tfState.GetLandingZoneKey()
@@ -27,7 +28,7 @@ func TestSharedServicesPrimaryResourceGroupsExists(t *testing.T) {
 	//arrange
 	t.Parallel()
 
-	tfState := NewTerraformState(t, "shared_services")
+	tfState := state.NewTerraformState(t, "shared_services")
 	resourceGroups := tfState.GetResourceGroups()
 
 	if resourceGroup, ok := resourceGroups["primary"]; ok {
@@ -42,7 +43,7 @@ func TestSharedServicesPrimaryResourceGroupsExists(t *testing.T) {
 func TestSharedServicesStateContainsOnlyOneResourceGroup(t *testing.T) {
 	//arrange
 	t.Parallel()
-	tfState := NewTerraformState(t, "shared_services")
+	tfState := state.NewTerraformState(t, "shared_services")
 
 	//act
 	resourceGroups := tfState.GetResourceGroups()
@@ -54,7 +55,7 @@ func TestSharedServicesStateContainsOnlyOneResourceGroup(t *testing.T) {
 func TestSharedServicesContainsOnlyOneResourceGroup(t *testing.T) {
 	//arrange
 	t.Parallel()
-	tfState := NewTerraformState(t, "shared_services")
+	tfState := state.NewTerraformState(t, "shared_services")
 	client, _ := azure.GetResourceGroupClientE(tfState.SubscriptionID)
 
 	//act
@@ -73,7 +74,7 @@ func TestSharedServicesContainsOnlyOneResourceGroup(t *testing.T) {
 
 func TestSharedServicesHasRecoveryServiceVault(t *testing.T) {
 	t.Parallel()
-	tfState := NewTerraformState(t, "shared_services")
+	tfState := state.NewTerraformState(t, "shared_services")
 	resourceGroups := tfState.GetResourceGroups()
 	recoveryVaults := tfState.GetRecoveryVaults()
 
